@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Project" %} • {% trans "PIAE" %}{% endblock %}
+
+{% block content %}
+  <div class="page">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
+      <h1>{% trans "Project" %}</h1>
+      <a class="button button--ghost" href="{% url 'projects' %}">{% trans "Back to projects" %}</a>
+    </div>
+
+    <div class="card">
+      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div>
+          <div class="muted">{% trans "Project ID" %}</div>
+          <div class="mono">{{ project.id }}</div>
+        </div>
+        <div>
+          <div class="muted">{% trans "Status" %}</div>
+          <div><span class="badge">{{ project.state }}</span></div>
+        </div>
+        <div>
+          <div class="muted">{% trans "Target language" %}</div>
+          <div>{{ project.language_code|upper }}</div>
+        </div>
+        <div>
+          <div class="muted">{% trans "Customer" %}</div>
+          <div>{{ project.customer_name|default:project.customer_id }}</div>
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <div class="muted">{% trans "Original file" %}</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <div class="mono">{{ project.original_file_name|default:"(unknown)" }}</div>
+            <a class="button" href="{% url 'project_original' project.id %}">{% trans "Download" %}</a>
+          </div>
+        </div>
+
+        <div style="grid-column: 1 / -1;">
+          <div class="muted">{% trans "Translated file" %}</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            {% if has_translated_file %}
+              <div class="mono">({% trans "uploaded" %})</div>
+              <a class="button button--ghost" href="{% url 'project_translated' project.id %}">{% trans "Download" %}</a>
+            {% else %}
+              <div class="muted">{% trans "No translated file yet." %}</div>
+              <span class="muted">—</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if feedback_text %}
+      <div class="card" style="margin-top:16px;">
+        <h2 style="margin-top:0;">{% trans "Customer feedback" %}</h2>
+        <p>{{ feedback_text }}</p>
+      </div>
+    {% endif %}
+
+    {% if project.state == 'ASSIGNED' %}
+      <div class="card" style="margin-top:16px;">
+        <h2 style="margin-top:0;">{% trans "Upload translated file" %}</h2>
+        <form method="post" enctype="multipart/form-data" class="form">
+          {% csrf_token %}
+
+          <div class="field {% if form.translated_file.errors %}field--error{% endif %}">
+            <label class="field__label">{{ form.translated_file.label }}</label>
+            <div class="field__control">
+              {{ form.translated_file }}
+            </div>
+            {% if form.translated_file.errors %}
+              <div class="field__errors">
+                {% for err in form.translated_file.errors %}<div class="field__error">{{ err }}</div>{% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
+          <button class="button" type="submit">{% trans "Submit translation" %}</button>
+        </form>
+      </div>
+    {% else %}
+      <div class="card" style="margin-top:16px;">
+        <p class="muted">{% trans "This project is in state" %} <strong>{{ project.state }}</strong>. {% trans "Upload is available only when the project is" %} <strong>ASSIGNED</strong>.</p>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

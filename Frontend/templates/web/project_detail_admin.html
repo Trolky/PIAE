@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Project" %} • {% trans "Admin" %} • {% trans "PIAE" %}{% endblock %}
+
+{% block content %}
+  <div class="page">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
+      <h1>{% trans "Project" %}</h1>
+      <a class="button button--ghost" href="{% url 'projects' %}">{% trans "Back to projects" %}</a>
+    </div>
+
+    <div class="card">
+      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div>
+          <div class="muted">{% trans "Project" %}</div>
+          <div class="mono">{{ project.id }}</div>
+        </div>
+        <div>
+          <div class="muted">{% trans "Status" %}</div>
+          <div><span class="badge">{{ project.state }}</span></div>
+        </div>
+        <div>
+          <div class="muted">{% trans "Customer" %}</div>
+          <div>{{ project.customer_name|default:project.customer_email|default:project.customer_id }}</div>
+        </div>
+        <div>
+          <div class="muted">{% trans "Translator" %}</div>
+          <div>{{ project.translator_name|default:project.translator_email|default:"(none)" }}</div>
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <div class="muted">{% trans "Feedback" %}</div>
+          {% if project.feedback_text %}
+            <p>{{ project.feedback_text }}</p>
+          {% else %}
+            <p class="muted">({% trans "empty" %})</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h2 style="margin-top:0;">{% trans "Send message" %}</h2>
+      <form method="post" class="form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="send" />
+
+        <div class="field {% if form.to.errors %}field--error{% endif %}">
+          <label class="field__label">{{ form.to.label }}</label>
+          <div class="field__control">{{ form.to }}</div>
+        </div>
+
+        <div class="field {% if form.subject.errors %}field--error{% endif %}">
+          <label class="field__label">{{ form.subject.label }}</label>
+          <div class="field__control">{{ form.subject }}</div>
+        </div>
+
+        <div class="field {% if form.text.errors %}field--error{% endif %}">
+          <label class="field__label">{{ form.text.label }}</label>
+          <div class="field__control">{{ form.text }}</div>
+        </div>
+
+        <button class="button" type="submit">{% trans "Send" %}</button>
+      </form>
+    </div>
+
+    {% if project.state != 'CLOSED' %}
+      <div class="card" style="margin-top:16px;">
+        <h2 style="margin-top:0;">{% trans "Close project" %}</h2>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="close" />
+          <button class="button button--danger" type="submit">{% trans "Close project" %}</button>
+        </form>
+        <p class="muted" style="margin-top:10px;">{% trans "Closing will notify customer and translator by email." %}</p>
+      </div>
+    {% else %}
+      <div class="card" style="margin-top:16px;">
+        <p class="muted">{% trans "This project is already" %} <strong>CLOSED</strong>.</p>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

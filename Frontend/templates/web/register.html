@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Register" %} • {% trans "PIAE" %}{% endblock %}
+
+{% block content %}
+  <div class="auth-layout">
+    <div class="auth-card">
+      <h1>{% trans "Register" %}</h1>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <label class="field {% if form.name.errors %}field--error{% endif %}" {% if form.name.errors %}data-error="{{ form.name.errors|striptags }}"{% endif %}>
+          <span class="field__label">{% trans "Username" %}</span>
+          {{ form.name }}
+          {% if form.name.errors %}<span class="field__hint">{{ form.name.errors|striptags }}</span>{% endif %}
+          {% if form.name.help_text %}<span class="field__hint">{{ form.name.help_text }}</span>{% endif %}
+        </label>
+
+        <label class="field {% if form.email_address.errors %}field--error{% endif %}" {% if form.email_address.errors %}data-error="{{ form.email_address.errors|striptags }}"{% endif %}>
+          <span class="field__label">{% trans "Email" %}</span>
+          {{ form.email_address }}
+          {% if form.email_address.errors %}<span class="field__hint">{{ form.email_address.errors|striptags }}</span>{% endif %}
+        </label>
+
+        <label class="field {% if form.role.errors %}field--error{% endif %}" {% if form.role.errors %}data-error="{{ form.role.errors|striptags }}"{% endif %}>
+          <span class="field__label">{% trans "Role" %}</span>
+          {{ form.role }}
+          {% if form.role.errors %}<span class="field__hint">{{ form.role.errors|striptags }}</span>{% endif %}
+        </label>
+
+        <label class="field {% if form.password.errors %}field--error{% endif %}" {% if form.password.errors %}data-error="{{ form.password.errors|striptags }}"{% endif %}>
+          <span class="field__label">{% trans "Password" %}</span>
+          {{ form.password }}
+          {% if form.password.errors %}<span class="field__hint">{{ form.password.errors|striptags }}</span>{% endif %}
+          {% if form.password.help_text %}<span class="field__hint">{{ form.password.help_text }}</span>{% endif %}
+        </label>
+
+        <label class="field {% if form.password_confirm.errors %}field--error{% endif %}" {% if form.password_confirm.errors %}data-error="{{ form.password_confirm.errors|striptags }}"{% endif %}>
+          <span class="field__label">{% trans "Confirm password" %}</span>
+          {{ form.password_confirm }}
+          {% if form.password_confirm.errors %}<span class="field__hint">{{ form.password_confirm.errors|striptags }}</span>{% endif %}
+        </label>
+
+        <button class="button button--full" type="submit">{% trans "Create account" %}</button>
+      </form>
+
+      <p class="muted">
+        {% trans "Already have an account?" %} <a href="{% url 'login' %}">{% trans "Login" %}</a>
+      </p>
+    </div>
+  </div>
+{% endblock %}

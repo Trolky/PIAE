@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Login" %} • {% trans "PIAE" %}{% endblock %}
+
+{% block content %}
+  <div class="auth-layout">
+    <div class="auth-card">
+      <h1>{% trans "Login" %}</h1>
+
+      <p class="muted" id="otp-hint" style="display:none; margin-top: 6px;">
+        {% trans "To use OTP, first sign in with password and activate OTP in your profile." %}
+      </p>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.method.errors %}
+          <label class="field field--error" data-error="{{ form.method.errors|striptags }}">
+            <span class="field__label">{{ form.method.label }}</span>
+            {{ form.method }}
+            <span class="field__hint">{{ form.method.errors|striptags }}</span>
+          </label>
+        {% else %}
+          <label class="field">
+            <span class="field__label">{{ form.method.label }}</span>
+            {{ form.method }}
+          </label>
+        {% endif %}
+
+        {% if form.username.errors %}
+          <label class="field field--error" data-error="{{ form.username.errors|striptags }}">
+            <span class="field__label">{% trans "Username" %}</span>
+            {{ form.username }}
+            <span class="field__hint">{{ form.username.errors|striptags }}</span>
+          </label>
+        {% else %}
+          <label class="field">
+            <span class="field__label">{% trans "Username" %}</span>
+            {{ form.username }}
+          </label>
+        {% endif %}
+
+        <div id="password-block">
+          {% if form.password.errors %}
+            <label class="field field--error" data-error="{{ form.password.errors|striptags }}">
+              <span class="field__label">{% trans "Password" %}</span>
+              {{ form.password }}
+              <span class="field__hint">{{ form.password.errors|striptags }}</span>
+            </label>
+          {% else %}
+            <label class="field">
+              <span class="field__label">{% trans "Password" %}</span>
+              {{ form.password }}
+            </label>
+          {% endif %}
+        </div>
+
+        <div id="otp-block">
+          {% if form.otp.errors %}
+            <label class="field field--error" data-error="{{ form.otp.errors|striptags }}">
+              <span class="field__label">{{ form.otp.label }}</span>
+              {{ form.otp }}
+              <span class="field__hint">{{ form.otp.errors|striptags }}</span>
+            </label>
+          {% else %}
+            <label class="field">
+              <span class="field__label">{{ form.otp.label }}</span>
+              {{ form.otp }}
+            </label>
+          {% endif %}
+        </div>
+
+        <button class="button button--full" type="submit">{% trans "Sign in" %}</button>
+      </form>
+
+      <p class="muted">
+        {% trans "Don't have an account?" %} <a href="{% url 'register' %}">{% trans "Register" %}</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      function toggle() {
+        var methodEl = document.getElementById('id_method');
+        var method = methodEl ? methodEl.value : 'password';
+        var showOtp = method === 'otp';
+
+        var passBlock = document.getElementById('password-block');
+        var otpBlock = document.getElementById('otp-block');
+        var hint = document.getElementById('otp-hint');
+
+        if (passBlock) passBlock.style.display = showOtp ? 'none' : '';
+        if (otpBlock) otpBlock.style.display = showOtp ? '' : 'none';
+        if (hint) hint.style.display = showOtp ? '' : 'none';
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        var methodEl = document.getElementById('id_method');
+        if (methodEl) {
+          methodEl.addEventListener('change', toggle);
+        }
+        toggle();
+      });
+    })();
+  </script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Home" %} • {% trans "PIAE" %}{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <h1>{% trans "Translation Projects" %}</h1>
+
+    <div class="card-grid">
+      <div class="card">
+        <h2>{% trans "Customer" %}</h2>
+        <p>{% trans "Create translation projects and approve results." %}</p>
+        <a class="button" href="{% url 'create_project' %}">{% trans "Create project" %}</a>
+      </div>
+
+      <div class="card">
+        <h2>{% trans "Translator" %}</h2>
+        <p>{% trans "See assigned projects and upload translated files." %}</p>
+        <a class="button" href="{% url 'projects' %}">{% trans "My assignments" %}</a>
+      </div>
+
+      <div class="card">
+        <h2>{% trans "Administrator" %}</h2>
+        <p>{% trans "Resolve feedback and close projects." %}</p>
+        <a class="button" href="{% url 'projects' %}">{% trans "Projects" %}</a>
+      </div>
+    </div>
+  </section>
+{% endblock %}

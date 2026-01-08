@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Project" %} • {% trans "PIAE" %}{% endblock %}
+
+{% block content %}
+  <div class="page">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
+      <h1>{% trans "Project" %}</h1>
+      <a class="button button--ghost" href="{% url 'projects' %}">{% trans "Back to projects" %}</a>
+    </div>
+
+    <div class="card">
+      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div>
+          <div class="muted">{% trans "Status" %}</div>
+          <div><span class="badge">{{ project.state }}</span></div>
+        </div>
+        <div>
+          <div class="muted">{% trans "Target language" %}</div>
+          <div>{{ project.language_code|upper }}</div>
+        </div>
+        <div>
+          <div class="muted">{% trans "Translator" %}</div>
+          <div>{{ project.translator_name|default:"(not assigned)" }}</div>
+        </div>
+        <div>
+          <div class="muted">{% trans "Created" %}</div>
+          <div class="muted">{{ project.created_at|default:"" }}</div>
+        </div>
+
+        <div style="grid-column: 1 / -1;">
+          <div class="muted">{% trans "Original file" %}</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <div class="mono">{{ project.original_file_name|default:"(unknown)" }}</div>
+            <a class="button button--ghost" href="{% url 'project_original' project.id %}">{% trans "Download" %}</a>
+          </div>
+        </div>
+
+        <div style="grid-column: 1 / -1;">
+          <div class="muted">{% trans "Translated file" %}</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            {% if has_translated_file %}
+              <div class="mono">({% trans "from translator" %})</div>
+              <a class="button" href="{% url 'project_translated' project.id %}">{% trans "Download" %}</a>
+            {% else %}
+              <div class="muted">{% trans "No translated file yet." %}</div>
+              <span class="muted">—</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if project.state == 'COMPLETED' %}
+      <div class="card" style="margin-top:16px;">
+        <h2 style="margin-top:0;">{% trans "Approve / Reject" %}</h2>
+
+        <p class="muted">{% trans "One feedback field for both actions. Feedback is optional for approve, required for reject." %}</p>
+
+        <form method="post" class="form" id="feedback-form">
+          {% csrf_token %}
+
+          <div class="field {% if form.text.errors %}field--error{% endif %}">
+            <label class="field__label">{{ form.text.label }}</label>
+            <div class="field__control">{{ form.text }}</div>
+            {% if form.text.errors %}
+              <div class="field__errors">
+                {% for err in form.text.errors %}<div class="field__error">{{ err }}</div>{% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button class="button" type="submit" formaction="{% url 'project_approve' project.id %}">{% trans "Approve" %}</button>
+            <button class="button button--danger" type="submit" formaction="{% url 'project_reject' project.id %}">{% trans "Reject" %}</button>
+          </div>
+        </form>
+      </div>
+    {% else %}
+      <div class="card" style="margin-top:16px;">
+        <p class="muted">{% trans "You can approve/reject only when the translation is completed." %}</p>
+      </div>
+    {% endif %}
+
+    {% if feedback_text is not None and feedback_text != '' %}
+      <div class="card" style="margin-top:16px;">
+        <h2 style="margin-top:0;">{% trans "Last feedback" %}</h2>
+        <p>{{ feedback_text }}</p>
+      </div>
+    {% elif feedback_text == '' %}
+      <div class="card" style="margin-top:16px;">
+        <h2 style="margin-top:0;">{% trans "Last feedback" %}</h2>
+        <p class="muted">({% trans "empty" %})</p>
+      </div>
+    {% endif %}
+
+  </div>
+{% endblock %}

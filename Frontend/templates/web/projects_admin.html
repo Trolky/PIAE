@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Projects" %} • {% trans "Admin" %} • {% trans "PIAE" %}{% endblock %}
+
+{% block content %}
+  <div class="page">
+    <h1>{% trans "Projects" %}</h1>
+    <p class="muted">{% trans "Admin view — projects with feedback. Open a project to message users or close it." %}</p>
+
+    {% if not projects %}
+      <div class="card">
+        <p class="muted">{% trans "No projects found." %}</p>
+      </div>
+    {% else %}
+      <div class="card">
+        <div class="table-wrap">
+          <table class="table" data-projects-table>
+            <thead>
+              <tr>
+                <th></th>
+                <th data-sort-key="state"><span class="table__th-label">{% trans "Status" %}</span></th>
+                <th data-sort-key="customer"><span class="table__th-label">{% trans "Customer" %}</span></th>
+                <th data-sort-key="translator"><span class="table__th-label">{% trans "Translator" %}</span></th>
+                <th>{% trans "Feedback" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in projects %}
+                <tr
+                  data-state="{{ p.state|default:'' }}"
+                  data-created="{{ p.created_at|default:'' }}"
+                  data-customer="{{ p.customer_name|default:p.customer_email|default:p.customer_id }}"
+                  data-translator="{{ p.translator_name|default:p.translator_email|default:'' }}"
+                >
+                  <td style="white-space:nowrap;">
+                    {% if p.state == 'CLOSED' %}
+                      <a class="button button--small button--ghost" href="{% url 'project_detail_admin' p.id %}">{% trans "Info" %}</a>
+                    {% else %}
+                      <a class="button button--small" href="{% url 'project_detail_admin' p.id %}">{% trans "Open" %}</a>
+                    {% endif %}
+                  </td>
+                  <td><span class="badge">{{ p.state }}</span></td>
+                  <td>{{ p.customer_name|default:p.customer_email|default:p.customer_id }}</td>
+                  <td>{{ p.translator_name|default:p.translator_email|default:"(none)" }}</td>
+                  <td style="max-width:520px;">
+                    {% if p.feedback_text %}
+                      {{ p.feedback_text }}
+                    {% else %}
+                      <span class="muted">({% trans "empty" %})</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

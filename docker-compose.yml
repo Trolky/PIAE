@@ -1,0 +1,47 @@
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  backend:
+    build:
+      context: ./Backend
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017
+      - MONGODB_DB=piae
+      - MAX_UPLOAD_MB=5
+      - JWT_SECRET=dev-secret-change-me
+      - CORS_ALLOW_ORIGINS=http://localhost:8001
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_FROM=no-reply@piae.local
+      - OTP_MASTER_SECRET=dev-otp-secret-change-me
+    depends_on:
+      - mongo
+      - mailhog
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./Frontend
+    environment:
+      - BACKEND_API_BASE_URL=http://backend:8000
+    depends_on:
+      - backend
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./Frontend:/app
+
+volumes:
+  mongo_data:

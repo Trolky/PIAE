@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "New project" %} • {% trans "PIAE" %}{% endblock %}
+
+{% block content %}
+  <div class="auth-layout">
+    <div class="auth-card">
+      <h1>{% trans "Create project" %}</h1>
+      <p class="muted">{% trans "Upload a source file in English and select the target language." %}</p>
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <label class="field {% if form.language_code.errors %}field--error{% endif %}" {% if form.language_code.errors %}data-error="{{ form.language_code.errors|striptags }}"{% endif %}>
+          <span class="field__label">{% trans "Target language" %}</span>
+          {{ form.language_code }}
+          {% if form.language_code.errors %}<span class="field__hint">{{ form.language_code.errors|striptags }}</span>{% endif %}
+        </label>
+
+        <label class="field {% if form.original_file.errors %}field--error{% endif %}" {% if form.original_file.errors %}data-error="{{ form.original_file.errors|striptags }}"{% endif %}>
+          <span class="field__label">{% trans "Source file (English)" %}</span>
+          {{ form.original_file }}
+          {% if form.original_file.errors %}<span class="field__hint">{{ form.original_file.errors|striptags }}</span>{% endif %}
+          <span class="field__hint">{% trans "Max upload size is limited by backend." %}</span>
+        </label>
+
+        <button class="button button--full" type="submit">{% trans "Create" %}</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

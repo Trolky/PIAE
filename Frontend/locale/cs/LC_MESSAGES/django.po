@@ -1,0 +1,682 @@
+# Czech translations for PIAE Frontend.
+msgid ""
+msgstr ""
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-08 22:03+0000\n"
+"Language: cs\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: templates/base.html:8 templates/base.html:14
+#: templates/web/create_project.html:4 templates/web/home.html:4
+#: templates/web/languages.html:4 templates/web/login.html:4
+#: templates/web/otp_setup.html:4 templates/web/project_detail_admin.html:4
+#: templates/web/project_detail_customer.html:4
+#: templates/web/project_detail_translator.html:4 templates/web/projects.html:4
+#: templates/web/projects_admin.html:4 templates/web/register.html:4
+msgid "PIAE"
+msgstr "PIAE"
+
+#: templates/base.html:18 templates/base.html:25 templates/web/home.html:26
+#: templates/web/projects.html:4 templates/web/projects.html:8
+#: templates/web/projects_admin.html:4 templates/web/projects_admin.html:8
+msgid "Projects"
+msgstr "Projekty"
+
+#: templates/base.html:20 templates/web/home.html:4
+msgid "Home"
+msgstr "Domů"
+
+#: templates/base.html:22 templates/web/create_project.html:4
+msgid "New project"
+msgstr "Nový projekt"
+
+#: templates/base.html:28 templates/web/languages.html:4
+msgid "Languages"
+msgstr "Jazyky"
+
+#: templates/base.html:38 templates/web/projects.html:30
+msgid "Language"
+msgstr "Jazyk"
+
+#: templates/base.html:57 templates/web/login.html:13
+#: templates/web/otp_setup.html:4 templates/web/otp_setup.html:8
+msgid "OTP setup"
+msgstr "Nastavení OTP"
+
+#: templates/base.html:58
+msgid "Logout"
+msgstr "Odhlásit se"
+
+#: templates/base.html:60 templates/web/login.html:4 templates/web/login.html:9
+#: templates/web/register.html:50
+msgid "Login"
+msgstr "Přihlášení"
+
+#: templates/base.html:61 templates/web/login.html:79
+#: templates/web/register.html:4 templates/web/register.html:9
+msgid "Register"
+msgstr "Registrace"
+
+#: templates/base.html:81
+msgid "PIAE • prototype UI"
+msgstr "PIAE • prototypové UI"
+
+#: templates/web/create_project.html:9 templates/web/home.html:14
+msgid "Create project"
+msgstr "Vytvořit projekt"
+
+#: templates/web/create_project.html:10
+msgid "Upload a source file in English and select the target language."
+msgstr "Nahrajte zdrojový soubor v angličtině a vyberte cílový jazyk."
+
+#: templates/web/create_project.html:16
+#: templates/web/project_detail_customer.html:20
+#: templates/web/project_detail_translator.html:24 web/project_forms.py:11
+msgid "Target language"
+msgstr "Cílový jazyk"
+
+#: templates/web/create_project.html:22 web/project_forms.py:16
+msgid "Source file (English)"
+msgstr "Zdrojový soubor (anglicky)"
+
+#: templates/web/create_project.html:25
+msgid "Max upload size is limited by backend."
+msgstr "Maximální velikost nahrávání je omezena backendem."
+
+#: templates/web/create_project.html:28
+msgid "Create"
+msgstr "Vytvořit"
+
+#: templates/web/home.html:8
+msgid "Translation Projects"
+msgstr "Překladatelské projekty"
+
+#: templates/web/home.html:12 templates/web/project_detail_admin.html:24
+#: templates/web/project_detail_translator.html:28
+#: templates/web/projects.html:35 templates/web/projects_admin.html:23
+#: web/admin_forms.py:9 web/forms.py:69
+msgid "Customer"
+msgstr "Zákazník"
+
+#: templates/web/home.html:13
+msgid "Create translation projects and approve results."
+msgstr "Vytvářejte překladatelské projekty a schvalujte výsledky."
+
+#: templates/web/home.html:18 templates/web/project_detail_admin.html:28
+#: templates/web/project_detail_customer.html:24 templates/web/projects.html:33
+#: templates/web/projects_admin.html:24 web/admin_forms.py:10 web/forms.py:70
+msgid "Translator"
+msgstr "Překladatel"
+
+#: templates/web/home.html:19
+msgid "See assigned projects and upload translated files."
+msgstr "Prohlížejte přiřazené projekty a nahrávejte přeložené soubory."
+
+#: templates/web/home.html:20
+msgid "My assignments"
+msgstr "Moje úkoly"
+
+#: templates/web/home.html:24
+msgid "Administrator"
+msgstr "Administrátor"
+
+#: templates/web/home.html:25
+msgid "Resolve feedback and close projects."
+msgstr "Řešte zpětnou vazbu a uzavírejte projekty."
+
+#: templates/web/languages.html:9
+msgid "My languages"
+msgstr "Moje jazyky"
+
+#: templates/web/languages.html:10
+msgid "Choose target languages you can translate to from English."
+msgstr "Vyberte cílové jazyky, do kterých můžete překládat z angličtiny."
+
+#: templates/web/languages.html:17 web/language_forms.py:22
+msgid "Translate to"
+msgstr "Překládat do"
+
+#: templates/web/languages.html:22
+msgid "Add language"
+msgstr "Přidat jazyk"
+
+#: templates/web/languages.html:26
+msgid "Configured"
+msgstr "Nastaveno"
+
+#: templates/web/languages.html:36
+msgid "Remove"
+msgstr "Odebrat"
+
+#: templates/web/languages.html:42
+msgid "No languages yet."
+msgstr "Zatím žádné jazyky."
+
+#: templates/web/login.html:12
+msgid ""
+"To use OTP, first sign in with password and activate OTP in your profile."
+msgstr ""
+"Pro použití OTP se nejdříve přihlaste heslem a aktivujte si OTP ve svém "
+"profilu."
+
+#: templates/web/login.html:34 templates/web/login.html:40
+#: templates/web/register.html:15 web/forms.py:23 web/forms.py:58
+msgid "Username"
+msgstr "Uživatelské jméno"
+
+#: templates/web/login.html:48 templates/web/login.html:54
+#: templates/web/register.html:34 web/forms.py:9 web/forms.py:30
+#: web/forms.py:76
+msgid "Password"
+msgstr "Heslo"
+
+#: templates/web/login.html:75
+msgid "Sign in"
+msgstr "Přihlásit se"
+
+#: templates/web/login.html:79
+msgid "Don't have an account?"
+msgstr "Nemáte účet?"
+
+#: templates/web/otp_setup.html:11
+msgid ""
+"Scan this URI as a QR code in your Authenticator app (or paste it into a QR "
+"generator):"
+msgstr ""
+"Naskenujte toto URI jako QR kód v aplikaci Authenticator (nebo ho vložte do "
+"generátoru QR):"
+
+#: templates/web/otp_setup.html:19
+msgid "Back"
+msgstr "Zpět"
+
+#: templates/web/project_detail_admin.html:4
+#: templates/web/project_detail_admin.html:9
+#: templates/web/project_detail_admin.html:16
+#: templates/web/project_detail_customer.html:4
+#: templates/web/project_detail_customer.html:9
+#: templates/web/project_detail_translator.html:4
+#: templates/web/project_detail_translator.html:9
+msgid "Project"
+msgstr "Projekt"
+
+#: templates/web/project_detail_admin.html:4
+#: templates/web/projects_admin.html:4
+msgid "Admin"
+msgstr "Admin"
+
+#: templates/web/project_detail_admin.html:10
+#: templates/web/project_detail_customer.html:10
+#: templates/web/project_detail_translator.html:10
+msgid "Back to projects"
+msgstr "Zpět na projekty"
+
+#: templates/web/project_detail_admin.html:20
+#: templates/web/project_detail_customer.html:16
+#: templates/web/project_detail_translator.html:20
+#: templates/web/projects.html:31 templates/web/projects_admin.html:22
+msgid "Status"
+msgstr "Stav"
+
+#: templates/web/project_detail_admin.html:32
+#: templates/web/projects_admin.html:25
+msgid "Feedback"
+msgstr "Zpětná vazba"
+
+#: templates/web/project_detail_admin.html:36
+#: templates/web/project_detail_customer.html:94
+#: templates/web/projects_admin.html:50
+msgid "empty"
+msgstr "prázdné"
+
+#: templates/web/project_detail_admin.html:43
+msgid "Send message"
+msgstr "Poslat zprávu"
+
+#: templates/web/project_detail_admin.html:63
+msgid "Send"
+msgstr "Odeslat"
+
+#: templates/web/project_detail_admin.html:69
+#: templates/web/project_detail_admin.html:73
+msgid "Close project"
+msgstr "Uzavřít projekt"
+
+#: templates/web/project_detail_admin.html:75
+msgid "Closing will notify customer and translator by email."
+msgstr "Uzavření odešle email zákazníkovi i překladateli."
+
+#: templates/web/project_detail_admin.html:79
+msgid "This project is already"
+msgstr "Tento projekt je již"
+
+#: templates/web/project_detail_customer.html:28 templates/web/projects.html:37
+msgid "Created"
+msgstr "Vytvořeno"
+
+#: templates/web/project_detail_customer.html:33
+#: templates/web/project_detail_translator.html:32
+msgid "Original file"
+msgstr "Původní soubor"
+
+#: templates/web/project_detail_customer.html:36
+#: templates/web/project_detail_customer.html:45
+#: templates/web/project_detail_translator.html:35
+#: templates/web/project_detail_translator.html:44
+msgid "Download"
+msgstr "Stáhnout"
+
+#: templates/web/project_detail_customer.html:41
+#: templates/web/project_detail_translator.html:40 web/translator_forms.py:8
+msgid "Translated file"
+msgstr "Přeložený soubor"
+
+#: templates/web/project_detail_customer.html:44
+msgid "from translator"
+msgstr "od překladatele"
+
+#: templates/web/project_detail_customer.html:47
+#: templates/web/project_detail_translator.html:46
+msgid "No translated file yet."
+msgstr "Zatím neexistuje přeložený soubor."
+
+#: templates/web/project_detail_customer.html:57
+msgid "Approve / Reject"
+msgstr "Schválit / Zamítnout"
+
+#: templates/web/project_detail_customer.html:59
+msgid ""
+"One feedback field for both actions. Feedback is optional for approve, "
+"required for reject."
+msgstr ""
+"Jedno pole pro zpětnou vazbu pro obě akce. U schválení je feedback "
+"volitelný, u zamítnutí povinný."
+
+#: templates/web/project_detail_customer.html:75
+msgid "Approve"
+msgstr "Schválit"
+
+#: templates/web/project_detail_customer.html:76
+msgid "Reject"
+msgstr "Zamítnout"
+
+#: templates/web/project_detail_customer.html:82
+msgid "You can approve/reject only when the translation is completed."
+msgstr "Schválit/zamítnout lze jen když je překlad dokončen."
+
+#: templates/web/project_detail_customer.html:88
+#: templates/web/project_detail_customer.html:93
+msgid "Last feedback"
+msgstr "Poslední zpětná vazba"
+
+#: templates/web/project_detail_translator.html:16
+msgid "Project ID"
+msgstr "ID projektu"
+
+#: templates/web/project_detail_translator.html:43
+msgid "uploaded"
+msgstr "nahráno"
+
+#: templates/web/project_detail_translator.html:56
+msgid "Customer feedback"
+msgstr "Zpětná vazba zákazníka"
+
+#: templates/web/project_detail_translator.html:63
+msgid "Upload translated file"
+msgstr "Nahrát přeložený soubor"
+
+#: templates/web/project_detail_translator.html:79
+msgid "Submit translation"
+msgstr "Odeslat překlad"
+
+#: templates/web/project_detail_translator.html:84
+msgid "This project is in state"
+msgstr "Tento projekt je ve stavu"
+
+#: templates/web/project_detail_translator.html:84
+msgid "Upload is available only when the project is"
+msgstr "Nahrání je dostupné pouze když je projekt ve stavu"
+
+#: templates/web/projects.html:11
+msgid "Your created projects."
+msgstr "Vaše vytvořené projekty."
+
+#: templates/web/projects.html:13
+msgid "Projects assigned to you."
+msgstr "Projekty přiřazené vám."
+
+#: templates/web/projects.html:15
+msgid "Projects."
+msgstr "Projekty."
+
+#: templates/web/projects.html:20
+msgid "No projects yet."
+msgstr "Zatím žádné projekty."
+
+#: templates/web/projects.html:29
+msgid "File"
+msgstr "Soubor"
+
+#: templates/web/projects.html:53
+msgid "Review"
+msgstr "Zkontrolovat"
+
+#: templates/web/projects.html:55 templates/web/projects.html:61
+#: templates/web/projects_admin.html:38
+msgid "Info"
+msgstr "Info"
+
+#: templates/web/projects.html:59 templates/web/projects_admin.html:40
+msgid "Open"
+msgstr "Otevřít"
+
+#: templates/web/projects.html:70
+msgid "unknown"
+msgstr "neznámé"
+
+#: templates/web/projects.html:83
+msgid "Assigned"
+msgstr "Přiřazeno"
+
+#: templates/web/projects.html:85
+msgid "Unassigned"
+msgstr "Nepřiřazeno"
+
+#: templates/web/projects.html:104
+msgid "Tip: click a column header to sort."
+msgstr "Tip: klikněte na záhlaví sloupce pro řazení."
+
+#: templates/web/projects_admin.html:9
+msgid ""
+"Admin view — projects with feedback. Open a project to message users or "
+"close it."
+msgstr ""
+"Admin pohled — projekty se zpětnou vazbou. Otevřete projekt pro zprávy a "
+"uzavření."
+
+#: templates/web/projects_admin.html:13
+msgid "No projects found."
+msgstr "Nenalezeny žádné projekty."
+
+#: templates/web/register.html:22 web/forms.py:63
+msgid "Email"
+msgstr "Email"
+
+#: templates/web/register.html:28 web/forms.py:67
+msgid "Role"
+msgstr "Role"
+
+#: templates/web/register.html:41 web/forms.py:82
+msgid "Confirm password"
+msgstr "Potvrďte heslo"
+
+#: templates/web/register.html:46
+msgid "Create account"
+msgstr "Vytvořit účet"
+
+#: templates/web/register.html:50
+msgid "Already have an account?"
+msgstr "Už máte účet?"
+
+#: web/admin_forms.py:13
+msgid "To"
+msgstr "Komu"
+
+#: web/admin_forms.py:15 web/admin_forms.py:17
+msgid "Subject"
+msgstr "Předmět"
+
+#: web/admin_forms.py:20 web/admin_forms.py:22
+msgid "Message"
+msgstr "Zpráva"
+
+#: web/customer_forms.py:9
+#, fuzzy
+#| msgid "from translator"
+msgid "Feedback for translator"
+msgstr "od překladatele"
+
+#: web/customer_forms.py:14
+msgid "Overall evaluation (optional for approve, required for reject)"
+msgstr "Celkové zhodnocení (u schválení volitelné, u zamítnutí povinné)"
+
+#: web/forms.py:10
+msgid "One-time code (OTP)"
+msgstr "Jednorázový kód (OTP)"
+
+#: web/forms.py:14
+msgid "Login method"
+msgstr "Způsob přihlášení"
+
+#: web/forms.py:19
+msgid "OTP requires prior activation after password login."
+msgstr "OTP vyžaduje předchozí aktivaci po přihlášení heslem."
+
+#: web/forms.py:25
+msgid "Alphanumeric username"
+msgstr "Alfanumerické uživatelské jméno"
+
+#: web/forms.py:37
+msgid "One-time code"
+msgstr "Jednorázový kód"
+
+#: web/forms.py:49
+msgid "OTP code is required."
+msgstr "Zadejte prosím OTP kód."
+
+#: web/forms.py:52
+msgid "Password is required."
+msgstr "Zadejte prosím heslo."
+
+#: web/forms.py:79
+msgid "Minimum 8 characters and at least one of them must be a number."
+msgstr "Minimálně 8 znaků a alespoň jeden z nich musí být číslo."
+
+#: web/forms.py:90
+msgid "Username must be alphanumeric."
+msgstr "Uživatelské jméno musí být alfanumerické."
+
+#: web/forms.py:96
+msgid "Password must contain at least one letter and one number."
+msgstr "Heslo musí obsahovat alespoň jedno písmeno a jedno číslo."
+
+#: web/forms.py:104
+msgid "Passwords do not match."
+msgstr "Hesla se neshodují."
+
+#: web/language_forms.py:7
+msgid "Czech (cs)"
+msgstr "Čeština (cs)"
+
+#: web/language_forms.py:8
+msgid "Slovak (sk)"
+msgstr "Slovenština (sk)"
+
+#: web/language_forms.py:9
+msgid "German (de)"
+msgstr "Němčina (de)"
+
+#: web/language_forms.py:10
+msgid "French (fr)"
+msgstr "Francouzština (fr)"
+
+#: web/language_forms.py:11
+msgid "Spanish (es)"
+msgstr "Španělština (es)"
+
+#: web/language_forms.py:12
+msgid "Italian (it)"
+msgstr "Italština (it)"
+
+#: web/language_forms.py:13
+msgid "Polish (pl)"
+msgstr "Polština (pl)"
+
+#: web/language_forms.py:14
+msgid "Portuguese (pt)"
+msgstr "Portugalština (pt)"
+
+#: web/language_forms.py:15
+msgid "Dutch (nl)"
+msgstr "Nizozemština (nl)"
+
+#: web/language_forms.py:16
+msgid "Swedish (sv)"
+msgstr "Švédština (sv)"
+
+#: web/language_forms.py:37
+msgid "Invalid language code"
+msgstr "Neplatný kód jazyka"
+
+#: web/project_forms.py:24 web/translator_forms.py:13
+msgid "File is required"
+msgstr "Soubor je povinný"
+
+#: web/views.py:70 web/views.py:295 web/views.py:367 web/views.py:392
+#: web/views.py:436 web/views.py:461 web/views.py:493 web/views.py:551
+msgid "Not allowed"
+msgstr "Nemáte oprávnění"
+
+#: web/views.py:75 web/views.py:221 web/views.py:256 web/views.py:261
+#: web/views.py:300 web/views.py:372 web/views.py:397 web/views.py:441
+#: web/views.py:469 web/views.py:501 web/views.py:556 web/views.py:614
+msgid "Not authenticated"
+msgstr "Nejste přihlášen"
+
+#: web/views.py:80
+msgid "Missing user id"
+msgstr "Chybí ID uživatele"
+
+#: web/views.py:100
+msgid "Language removed"
+msgstr "Jazyk odebrán"
+
+#: web/views.py:103
+msgid "Failed to remove language"
+msgstr "Nepodařilo se odebrat jazyk"
+
+#: web/views.py:106
+msgid "Invalid remove request"
+msgstr "Neplatný požadavek na odebrání"
+
+#: web/views.py:117
+msgid "Language added"
+msgstr "Jazyk přidán"
+
+#: web/views.py:120
+msgid "Failed to add language"
+msgstr "Nepodařilo se přidat jazyk"
+
+#: web/views.py:123 web/views.py:171 web/views.py:198 web/views.py:245
+#: web/views.py:348 web/views.py:474 web/views.py:593
+msgid "Please fix the form errors."
+msgstr "Opravte prosím chyby ve formuláři."
+
+#: web/views.py:129
+msgid "Failed to load languages"
+msgstr "Nepodařilo se načíst jazyky"
+
+#: web/views.py:164
+msgid "Logged in"
+msgstr "Přihlášení proběhlo úspěšně"
+
+#: web/views.py:168
+msgid "Login failed"
+msgstr "Přihlášení se nezdařilo"
+
+#: web/views.py:192
+msgid "Account created. You can log in now."
+msgstr "Účet byl vytvořen. Nyní se můžete přihlásit."
+
+#: web/views.py:195
+msgid "Registration failed"
+msgstr "Registrace se nezdařila"
+
+#: web/views.py:208
+msgid "Logged out"
+msgstr "Byl jste odhlášen"
+
+#: web/views.py:216
+msgid "Only customers can create projects"
+msgstr "Projekty mohou vytvářet pouze zákazníci"
+
+#: web/views.py:239
+msgid "Project created"
+msgstr "Projekt vytvořen"
+
+#: web/views.py:242
+msgid "Failed to create project"
+msgstr "Nepodařilo se vytvořit projekt"
+
+#: web/views.py:271 web/views.py:282
+msgid "Failed to load projects"
+msgstr "Nepodařilo se načíst projekty"
+
+#: web/views.py:306 web/views.py:402 web/views.py:562
+msgid "Failed to load project"
+msgstr "Nepodařilo se načíst projekt"
+
+#: web/views.py:312 web/views.py:408 web/views.py:518 web/views.py:568
+msgid "Project not found"
+msgstr "Projekt nebyl nalezen"
+
+#: web/views.py:342
+msgid "Translation uploaded. Customer will be notified by email."
+msgstr "Překlad byl nahrán. Zákazník bude informován e-mailem."
+
+#: web/views.py:345
+msgid "Failed to upload translation"
+msgstr "Nepodařilo se nahrát překlad"
+
+#: web/views.py:377
+msgid "Failed to download file"
+msgstr "Nepodařilo se stáhnout soubor"
+
+#: web/views.py:446
+msgid "Failed to download translated file"
+msgstr "Nepodařilo se stáhnout přeložený soubor"
+
+#: web/views.py:481
+msgid "Approved"
+msgstr "Schváleno"
+
+#: web/views.py:483
+msgid "Failed to approve"
+msgstr "Nepodařilo se schválit"
+
+#: web/views.py:509
+msgid "Feedback is required when rejecting."
+msgstr "Při zamítnutí je zpětná vazba povinná."
+
+#: web/views.py:539
+msgid "Rejected and feedback sent"
+msgstr "Zamítnuto a zpětná vazba odeslána"
+
+#: web/views.py:542
+msgid "Failed to reject"
+msgstr "Nepodařilo se zamítnout"
+
+#: web/views.py:587
+msgid "Message sent"
+msgstr "Zpráva odeslána"
+
+#: web/views.py:590
+msgid "Failed to send message"
+msgstr "Nepodařilo se odeslat zprávu"
+
+#: web/views.py:598
+msgid "Project closed"
+msgstr "Projekt uzavřen"
+
+#: web/views.py:601
+msgid "Failed to close project"
+msgstr "Nepodařilo se uzavřít projekt"
+
+#: web/views.py:605
+msgid "Invalid action"
+msgstr "Neplatná akce"
+
+#: web/views.py:622
+msgid "Failed to enable OTP"
+msgstr "Nepodařilo se zapnout OTP"

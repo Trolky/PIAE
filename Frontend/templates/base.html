@@ -1,0 +1,87 @@
+{% load static i18n %}
+<!doctype html>
+{% get_current_language as CURRENT_LANGUAGE %}
+<html lang="{{ CURRENT_LANGUAGE }}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}{% trans "PIAE" %}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container topbar__inner">
+        <a class="brand" href="{% url 'home' %}">{% trans "PIAE" %}</a>
+
+        <nav class="nav">
+          {% if request.session.user and request.session.user.role and request.session.user.role|upper == 'ADMINISTRATOR' %}
+            <a class="nav__link" href="{% url 'projects' %}">{% trans "Projects" %}</a>
+          {% else %}
+            <a class="nav__link" href="{% url 'home' %}">{% trans "Home" %}</a>
+            {% if request.session.user and request.session.user.role and request.session.user.role|upper == 'CUSTOMER' %}
+              <a class="nav__link" href="{% url 'create_project' %}">{% trans "New project" %}</a>
+            {% endif %}
+            {% if request.session.user %}
+              <a class="nav__link" href="{% url 'projects' %}">{% trans "Projects" %}</a>
+            {% endif %}
+            {% if request.session.user and request.session.user.role and request.session.user.role|upper in 'TRANSLATOR ADMINISTRATOR' %}
+              <a class="nav__link" href="{% url 'languages' %}">{% trans "Languages" %}</a>
+            {% endif %}
+          {% endif %}
+        </nav>
+
+        <div class="auth">
+          <form method="post" action="{% url 'set_language' %}" class="langswitch" aria-label="Language switcher">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+
+            <label class="sr-only" for="lang-select">{% trans "Language" %}</label>
+            <select id="lang-select" name="language" class="field__input" onchange="this.form.submit()">
+              {% if CURRENT_LANGUAGE == 'cs' %}
+                <option value="en">EN</option>
+                <option value="cs" selected>CS</option>
+              {% else %}
+                <option value="en" selected>EN</option>
+                <option value="cs">CS</option>
+              {% endif %}
+            </select>
+          </form>
+
+          {% if request.session.user %}
+            <div class="userpill">
+              <span class="userpill__name">{{ request.session.user.username }}</span>
+              {% if request.session.user.role %}
+                <span class="role role--{{ request.session.user.role|lower }}">{{ request.session.user.role }}</span>
+              {% endif %}
+            </div>
+            <a class="button button--ghost" href="{% url 'otp_setup' %}">{% trans "OTP setup" %}</a>
+            <a class="button button--ghost" href="{% url 'logout' %}">{% trans "Logout" %}</a>
+          {% else %}
+            <a class="button button--ghost" href="{% url 'login' %}">{% trans "Login" %}</a>
+            <a class="button" href="{% url 'register' %}">{% trans "Register" %}</a>
+          {% endif %}
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      {% if messages %}
+        <div class="messages">
+          {% for message in messages %}
+            <div class="message message--{{ message.tags|default:'info' }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+      <div class="container footer__inner">
+        <span class="muted">{% trans "PIAE • prototype UI" %}</span>
+      </div>
+    </footer>
+
+    <script src="{% static 'js/projects_sort.js' %}"></script>
+  </body>
+</html>
