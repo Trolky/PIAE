@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from io import BytesIO
-from typing import cast
+from typing import TypedDict, cast
 
 from django.conf import settings
 from django.contrib import messages
@@ -28,8 +28,11 @@ from web.backend_client import (
     list_translator_languages,
     otp_enable as backend_otp_enable,
     reject_project as backend_reject_project,
-    submit_translation as backend_submit_translation,
+    submit_translation as backend_submit_translation, BackendResponse,
+    ProjectListItemOut,
+    AdminFeedbackProjectOut,
 )
+
 from web.backend_client import login as backend_login
 from web.backend_client import otp_login as backend_otp_login
 from web.backend_client import register_user
@@ -39,6 +42,12 @@ from web.project_forms import ProjectCreateForm
 from web.translator_forms import TranslationUploadForm
 from web.customer_forms import FeedbackForm
 from web.admin_forms import AdminMessageForm
+
+
+class SessionUser(TypedDict, total=False):
+    user_id: str
+    role: str
+    username: str
 
 def _sha256_hex(value: str) -> str:
     """Return SHA-256 hex digest of a string.
@@ -66,7 +75,7 @@ def _session(request: HttpRequest) -> SessionBase:
     return cast(SessionBase, getattr(request, "session"))
 
 
-def _require_roles(request: HttpRequest, allowed: set[str]) -> dict:
+def _require_roles(request: HttpRequest, allowed: set[str]) -> SessionUser:
     """Ensure the user is authenticated and has one of the allowed roles.
 
     Args:
@@ -74,14 +83,16 @@ def _require_roles(request: HttpRequest, allowed: set[str]) -> dict:
         allowed: Allowed role names.
 
     Returns:
-        dict: Session user dict.
+        SessionUser: Session user dict.
 
     Raises:
         PermissionError: If missing session user or role is not allowed.
     """
-    user = _session(request).get(settings.SESSION_USER_KEY)
-    if not user:
+    user_obj = _session(request).get(settings.SESSION_USER_KEY)
+    if not user_obj:
         raise PermissionError("Not authenticated")
+
+    user = cast(SessionUser, user_obj)
     role = (user.get("role") or "").upper()
     if role not in allowed:
         raise PermissionError("Forbidden")
@@ -98,7 +109,7 @@ def languages_view(request: HttpRequest) -> HttpResponse:
     """
 
     try:
-        user = _require_roles(request, {"TRANSLATOR", "ADMINISTRATOR"})
+        user: SessionUser = _require_roles(request, {"TRANSLATOR", "ADMINISTRATOR"})
     except PermissionError:
         messages.error(request, _("Not allowed"))
         return redirect("home")
@@ -115,16 +126,16 @@ def languages_view(request: HttpRequest) -> HttpResponse:
 
     languages: list[str] = []
 
-    add_form = LanguageAddForm()
+    add_form: LanguageAddForm = LanguageAddForm()
 
     if request.method == "POST":
-        action = request.POST.get("action")
+        action: str | None = request.POST.get("action")
 
         if action == "remove":
-            remove_form = LanguageRemoveForm(request.POST)
+            remove_form: LanguageRemoveForm = LanguageRemoveForm(request.POST)
             if remove_form.is_valid():
                 code = remove_form.cleaned_data["language_code"]
-                resp = delete_translator_language(
+                resp: BackendResponse = delete_translator_language(
                     translator_id=str(translator_id),
                     language_code=code,
                     token=str(token),
@@ -133,7 +144,7 @@ def languages_view(request: HttpRequest) -> HttpResponse:
                     messages.success(request, _("Language removed"))
                     return redirect("languages")
 
-                detail = (resp.data or {}).get("detail") or _("Failed to remove language")
+                detail: str | None = (resp.data or {}).get("detail") or _("Failed to remove language")
                 messages.error(request, str(detail))
             else:
                 messages.error(request, _("Invalid remove request"))
@@ -180,16 +191,14 @@ def login_view(request: HttpRequest) -> HttpResponse:
     - OTP (TOTP) login (requires prior activation)
     """
     if request.method == "POST":
-        form = LoginForm(request.POST)
+        form: LoginForm = LoginForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data["username"]
-            method = form.cleaned_data.get("method") or "password"
+            username: str = form.cleaned_data["username"]
+            method: str | None = form.cleaned_data.get("method") or "password"
 
             if method == "otp":
-                # OTP login
                 resp = backend_otp_login(username=username, otp=(form.cleaned_data.get("otp") or "").strip())
             else:
-                # Password login
                 resp = backend_login(username=username, password=form.cleaned_data["password"])
 
             if resp.status == 200 and resp.data:
@@ -202,8 +211,7 @@ def login_view(request: HttpRequest) -> HttpResponse:
                 messages.success(request, _("Logged in"))
                 return redirect("home")
 
-            # pokud je OTP metoda, pouze zobrazíme chybu.
-            detail = (resp.data or {}).get("detail") or _("Login failed")
+            detail: str | None = (resp.data or {}).get("detail") or _("Login failed")
             messages.error(request, str(detail))
         else:
             messages.error(request, _("Please fix the form errors."))
@@ -219,9 +227,9 @@ def register_view(request: HttpRequest) -> HttpResponse:
     Creates a CUSTOMER or TRANSLATOR account using the backend API.
     """
     if request.method == "POST":
-        form = RegisterForm(request.POST)
+        form: RegisterForm = RegisterForm(request.POST)
         if form.is_valid():
-            resp = register_user(
+            resp: BackendResponse = register_user(
                 name=form.cleaned_data["name"],
                 email_address=form.cleaned_data["email_address"],
                 password=form.cleaned_data["password"],
@@ -232,7 +240,7 @@ def register_view(request: HttpRequest) -> HttpResponse:
                 messages.success(request, _("Account created. You can log in now."))
                 return redirect("login")
 
-            detail = (resp.data or {}).get("detail") or _("Registration failed")
+            detail: str | None = (resp.data or {}).get("detail") or _("Registration failed")
             messages.error(request, str(detail))
         else:
             messages.error(request, _("Please fix the form errors."))
@@ -253,7 +261,7 @@ def logout_view(request: HttpRequest) -> HttpResponse:
 def create_project_view(request: HttpRequest) -> HttpResponse:
     """Customer UI for creating a project and uploading the original file."""
     try:
-        user = _require_roles(request, {"CUSTOMER"})
+        user: SessionUser = _require_roles(request, {"CUSTOMER"})
     except PermissionError:
         messages.error(request, _("Only customers can create projects"))
         return redirect("home")
@@ -264,12 +272,12 @@ def create_project_view(request: HttpRequest) -> HttpResponse:
         return redirect("login")
 
     if request.method == "POST":
-        form = ProjectCreateForm(request.POST, request.FILES)
+        form: ProjectCreateForm = ProjectCreateForm(request.POST, request.FILES)
         if form.is_valid():
             f = form.cleaned_data["original_file"]
             content_type = getattr(f, "content_type", None) or "application/octet-stream"
 
-            resp = backend_create_project(
+            resp: BackendResponse = backend_create_project(
                 language_code=form.cleaned_data["language_code"],
                 file_name=getattr(f, "name", "upload.bin"),
                 file_bytes=f.read(),
@@ -281,7 +289,7 @@ def create_project_view(request: HttpRequest) -> HttpResponse:
                 messages.success(request, _("Project created"))
                 return redirect("home")
 
-            detail = (resp.data or {}).get("detail") or _("Failed to create project")
+            detail: str | None = (resp.data or {}).get("detail") or _("Failed to create project")
             messages.error(request, str(detail))
         else:
             messages.error(request, _("Please fix the form errors."))
@@ -299,7 +307,7 @@ def projects_view(request: HttpRequest) -> HttpResponse:
     - ADMINISTRATOR: shows projects with feedback using admin endpoint
     """
     try:
-        user = _require_roles(request, {"CUSTOMER", "TRANSLATOR", "ADMINISTRATOR"})
+        user: SessionUser = _require_roles(request, {"CUSTOMER", "TRANSLATOR", "ADMINISTRATOR"})
     except PermissionError:
         messages.error(request, _("Not authenticated"))
         return redirect("login")
@@ -309,29 +317,26 @@ def projects_view(request: HttpRequest) -> HttpResponse:
         messages.error(request, _("Not authenticated"))
         return redirect("login")
 
-    role = (user.get("role") or "").upper()
+    role: str = (user.get("role") or "").upper()
 
     if role == "ADMINISTRATOR":
-        # Admin chce vidět všechny projekty – použijeme admin endpoint "feedback inbox" jako základ.
-        # (v dalším kroku případně doplníme backend endpoint na všechny projekty bez filtru)
-        resp = admin_list_feedback_projects(token=str(token))
+        resp: BackendResponse[list[AdminFeedbackProjectOut]] = admin_list_feedback_projects(token=str(token))
         if resp.status != 200 or resp.data is None:
             detail = (resp.data or {}).get("detail") or _("Failed to load projects")
             messages.error(request, str(detail))
-            projects: list[dict] = []
+            projects_admin: list[AdminFeedbackProjectOut] = []
         else:
-            projects = resp.data  # type: ignore[assignment]
+            projects_admin = resp.data
 
-        return render(request, "web/projects_admin.html", {"projects": projects, "role": role})
+        return render(request, "web/projects_admin.html", {"projects": projects_admin, "role": role})
 
-    # CUSTOMER / TRANSLATOR původní chování
-    resp = backend_list_projects(token=str(token))
+    resp: BackendResponse[list[ProjectListItemOut]] = backend_list_projects(token=str(token))
     if resp.status != 200 or resp.data is None:
         detail = (resp.data or {}).get("detail") or _("Failed to load projects")
         messages.error(request, str(detail))
-        projects = []
+        projects: list[ProjectListItemOut] = []
     else:
-        projects = resp.data  # type: ignore[assignment]
+        projects = resp.data
 
     return render(request, "web/projects.html", {"projects": projects, "role": role})
 
@@ -343,7 +348,7 @@ def project_detail_translator_view(request: HttpRequest, project_id: str) -> Htt
     Also displays last feedback (if any).
     """
     try:
-        user = _require_roles(request, {"TRANSLATOR"})
+        user: SessionUser = _require_roles(request, {"TRANSLATOR"})
     except PermissionError:
         messages.error(request, _("Not allowed"))
         return redirect("login")
@@ -353,34 +358,34 @@ def project_detail_translator_view(request: HttpRequest, project_id: str) -> Htt
         messages.error(request, _("Not authenticated"))
         return redirect("login")
 
-    resp = backend_list_projects(token=str(token))
+    resp: BackendResponse[list[ProjectListItemOut]] = backend_list_projects(token=str(token))
     if resp.status != 200 or resp.data is None:
-        detail = (resp.data or {}).get("detail") or _("Failed to load project")
+        detail: str | None = (resp.data or {}).get("detail") or _("Failed to load project")
         messages.error(request, str(detail))
         return redirect("projects")
 
-    project = next((p for p in resp.data if str(p.get("id")) == str(project_id)), None)  # type: ignore[arg-type]
+    project: ProjectListItemOut | None = next((p for p in resp.data if str(p.get("id")) == str(project_id)), None)
     if project is None:
         messages.error(request, _("Project not found"))
         return redirect("projects")
 
-    has_translated_file = False
-    detail_resp = get_project(project_id=str(project_id), token=str(token))
+    has_translated_file: bool = False
+    detail_resp: BackendResponse = get_project(project_id=str(project_id), token=str(token))
     if detail_resp.status == 200 and detail_resp.data:
         has_translated_file = bool(detail_resp.data.get("translated_file_id"))
 
-    feedback_text = None
+    feedback_text: str | None = None
     fb_resp = get_feedback_by_project(project_id=str(project_id), token=str(token))
     if fb_resp.status == 200 and fb_resp.data:
         feedback_text = fb_resp.data.get("text")
 
-    form = TranslationUploadForm()
+    form: TranslationUploadForm = TranslationUploadForm()
     if request.method == "POST":
         form = TranslationUploadForm(request.POST, request.FILES)
         if form.is_valid():
             f = form.cleaned_data["translated_file"]
-            content_type = getattr(f, "content_type", None) or "application/octet-stream"
-            res = backend_submit_translation(
+            content_type: str | None = getattr(f, "content_type", None) or "application/octet-stream"
+            res: BackendResponse = backend_submit_translation(
                 project_id=str(project_id),
                 file_name=getattr(f, "name", "translation.bin"),
                 file_bytes=f.read(),
@@ -431,8 +436,8 @@ def project_original_proxy_view(request: HttpRequest, project_id: str) -> HttpRe
         messages.error(request, _("Failed to download file"))
         return redirect("projects")
 
-    filename = "download.bin"
-    cd = headers.get("Content-Disposition") or headers.get("content-disposition")
+    filename: str = "download.bin"
+    cd: str | None = headers.get("Content-Disposition") or headers.get("content-disposition")
     if cd and "filename=" in cd:
         filename = cd.split("filename=")[-1].strip().strip('"')
 
@@ -456,28 +461,28 @@ def project_detail_customer_view(request: HttpRequest, project_id: str) -> HttpR
         messages.error(request, _("Not authenticated"))
         return redirect("login")
 
-    resp = backend_list_projects(token=str(token))
+    resp: BackendResponse[list[ProjectListItemOut]] = backend_list_projects(token=str(token))
     if resp.status != 200 or resp.data is None:
         detail = (resp.data or {}).get("detail") or _("Failed to load project")
         messages.error(request, str(detail))
         return redirect("projects")
 
-    project = next((p for p in resp.data if str(p.get("id")) == str(project_id)), None)  # type: ignore[arg-type]
+    project: ProjectListItemOut | None = next((p for p in resp.data if str(p.get("id")) == str(project_id)), None)
     if project is None:
         messages.error(request, _("Project not found"))
         return redirect("projects")
 
-    has_translated_file = False
-    detail_resp = get_project(project_id=str(project_id), token=str(token))
+    has_translated_file: bool = False
+    detail_resp: BackendResponse = get_project(project_id=str(project_id), token=str(token))
     if detail_resp.status == 200 and detail_resp.data:
         has_translated_file = bool(detail_resp.data.get("translated_file_id"))
 
-    feedback_text = None
-    fb_resp = get_feedback_by_project(project_id=str(project_id), token=str(token))
+    feedback_text: str | None = None
+    fb_resp: BackendResponse = get_feedback_by_project(project_id=str(project_id), token=str(token))
     if fb_resp.status == 200 and fb_resp.data:
         feedback_text = fb_resp.data.get("text")
 
-    form = FeedbackForm()
+    form: FeedbackForm = FeedbackForm()
 
     return render(
         request,
@@ -504,8 +509,8 @@ def project_translated_proxy_view(request: HttpRequest, project_id: str) -> Http
         messages.error(request, _("Failed to download translated file"))
         return redirect("projects")
 
-    filename = "translated.bin"
-    cd = headers.get("Content-Disposition") or headers.get("content-disposition")
+    filename: str = "translated.bin"
+    cd: str | None = headers.get("Content-Disposition") or headers.get("content-disposition")
     if cd and "filename=" in cd:
         filename = cd.split("filename=")[-1].strip().strip('"')
 
@@ -528,18 +533,18 @@ def project_approve_view(request: HttpRequest, project_id: str) -> HttpResponse:
         messages.error(request, _("Not authenticated"))
         return redirect("login")
 
-    form = FeedbackForm(request.POST)
+    form: FeedbackForm = FeedbackForm(request.POST)
     if not form.is_valid():
         messages.error(request, _("Please fix the form errors."))
         return redirect("project_detail_customer", project_id=project_id)
 
-    text = (form.cleaned_data.get("text") or "")
+    text: str | None = (form.cleaned_data.get("text") or "")
 
-    res = backend_approve_project(project_id=str(project_id), token=str(token), text=text)
+    res: BackendResponse = backend_approve_project(project_id=str(project_id), token=str(token), text=text)
     if res.status in (200, 204):
         messages.success(request, _("Approved"))
     else:
-        detail = (res.data or {}).get("detail") or _("Failed to approve")
+        detail: str | None = (res.data or {}).get("detail") or _("Failed to approve")
         messages.error(request, str(detail))
 
     return redirect("projects")
@@ -561,28 +566,28 @@ def project_reject_view(request: HttpRequest, project_id: str) -> HttpResponse:
         messages.error(request, _("Not authenticated"))
         return redirect("login")
 
-    form = FeedbackForm(request.POST)
-    text = (request.POST.get("text") or "").strip()
+    form: FeedbackForm = FeedbackForm(request.POST)
+    text: str = (request.POST.get("text") or "").strip()
 
     if not text:
         form.add_error("text", _("Feedback is required when rejecting."))
 
     if not form.is_valid() or not text:
-        resp = backend_list_projects(token=str(token))
-        project = None
+        resp: BackendResponse = backend_list_projects(token=str(token))
+        project: ProjectListItemOut | None = None
         if resp.status == 200 and resp.data:
-            project = next((p for p in resp.data if str(p.get("id")) == str(project_id)), None)  # type: ignore[arg-type]
+            project = next((p for p in resp.data if str(p.get("id")) == str(project_id)), None)
         if project is None:
             messages.error(request, _("Project not found"))
             return redirect("projects")
 
-        has_translated_file = False
-        detail_resp = get_project(project_id=str(project_id), token=str(token))
+        has_translated_file: bool = False
+        detail_resp: BackendResponse = get_project(project_id=str(project_id), token=str(token))
         if detail_resp.status == 200 and detail_resp.data:
             has_translated_file = bool(detail_resp.data.get("translated_file_id"))
 
-        feedback_text = None
-        fb_resp = get_feedback_by_project(project_id=str(project_id), token=str(token))
+        feedback_text: str | None = None
+        fb_resp: BackendResponse = get_feedback_by_project(project_id=str(project_id), token=str(token))
         if fb_resp.status == 200 and fb_resp.data:
             feedback_text = fb_resp.data.get("text")
 
@@ -592,12 +597,12 @@ def project_reject_view(request: HttpRequest, project_id: str) -> HttpResponse:
             {"project": project, "form": form, "feedback_text": feedback_text, "has_translated_file": has_translated_file},
         )
 
-    res = backend_reject_project(project_id=str(project_id), text=text, token=str(token))
+    res: BackendResponse = backend_reject_project(project_id=str(project_id), text=text, token=str(token))
     if res.status in (200, 204):
         messages.success(request, _("Rejected and feedback sent"))
         return redirect("projects")
 
-    detail = (res.data or {}).get("detail") or _("Failed to reject")
+    detail: str | None = (res.data or {}).get("detail") or _("Failed to reject")
     messages.error(request, str(detail))
     return redirect("project_detail_customer", project_id=project_id)
 
@@ -618,26 +623,26 @@ def project_detail_admin_view(request: HttpRequest, project_id: str) -> HttpResp
         messages.error(request, _("Not authenticated"))
         return redirect("login")
 
-    resp = admin_list_feedback_projects(token=str(token))
+    resp: BackendResponse[list[AdminFeedbackProjectOut]] = admin_list_feedback_projects(token=str(token))
     if resp.status != 200 or resp.data is None:
-        detail = (resp.data or {}).get("detail") or _("Failed to load project")
+        detail: str | None = (resp.data or {}).get("detail") or _("Failed to load project")
         messages.error(request, str(detail))
         return redirect("projects")
 
-    project = next((p for p in resp.data if str(p.get("id")) == str(project_id)), None)  # type: ignore[arg-type]
+    project: AdminFeedbackProjectOut | None = next((p for p in resp.data if str(p.get("id")) == str(project_id)), None)
     if project is None:
         messages.error(request, _("Project not found"))
         return redirect("projects")
 
-    form = AdminMessageForm()
+    form: AdminMessageForm = AdminMessageForm()
 
     if request.method == "POST":
-        action = (request.POST.get("action") or "").lower()
+        action: str = (request.POST.get("action") or "").lower()
 
         if action == "send":
             form = AdminMessageForm(request.POST)
             if form.is_valid():
-                r = admin_send_project_message(
+                r: BackendResponse = admin_send_project_message(
                     project_id=str(project_id),
                     token=str(token),
                     to=form.cleaned_data["to"],
@@ -675,10 +680,10 @@ def otp_setup_view(request: HttpRequest) -> HttpResponse:
         messages.error(request, _("Not authenticated"))
         return redirect("login")
 
-    resp = backend_otp_enable(token=str(token))
+    resp: BackendResponse = backend_otp_enable(token=str(token))
     if resp.status == 200 and resp.data and resp.data.get("otpauth_uri"):
         return render(request, "web/otp_setup.html", {"otpauth_uri": resp.data.get("otpauth_uri")})
 
-    detail = (resp.data or {}).get("detail") or _("Failed to enable OTP")
+    detail: str | None = (resp.data or {}).get("detail") or _("Failed to enable OTP")
     messages.error(request, str(detail))
     return redirect("home")

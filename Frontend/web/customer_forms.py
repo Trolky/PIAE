@@ -12,7 +12,7 @@ class FeedbackForm(forms.Form):
         - Must be non-empty for REJECT (enforced in the view)
     """
 
-    text = forms.CharField(
+    text: forms.CharField = forms.CharField(
         label=_("Feedback for translator"),
         widget=forms.Textarea(
             attrs={

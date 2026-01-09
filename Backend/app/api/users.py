@@ -14,7 +14,7 @@ from app.repositories.users import UserRepository
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/users", tags=["users"])
+router: APIRouter = APIRouter(prefix="/users", tags=["users"])
 
 
 class RegisterUserIn(BaseModel):
@@ -62,7 +62,7 @@ class TranslatorLanguagesOut(BaseModel):
 
 
 @router.post("/customers/register", response_model=RegisterUserOut, status_code=201)
-async def register_customer(payload: RegisterUserIn, db=Db) -> RegisterUserOut:
+async def register_customer(payload: RegisterUserIn, db: Db) -> RegisterUserOut:
     """Register a new customer account.
 
     Args:
@@ -75,12 +75,12 @@ async def register_customer(payload: RegisterUserIn, db=Db) -> RegisterUserOut:
     Raises:
         HTTPException: If user already exists.
     """
-    repo = UserRepository(db)
+    repo: UserRepository = UserRepository(db)
     await repo.ensure_indexes()
 
     from app.security.passwords import hash_password
 
-    user = User(
+    user: User = User(
         id=uuid4(),
         name=payload.name,
         email_address=payload.email_address,
@@ -98,14 +98,14 @@ async def register_customer(payload: RegisterUserIn, db=Db) -> RegisterUserOut:
 
 
 @router.post("/translators/register", response_model=RegisterUserOut, status_code=201)
-async def register_translator(payload: RegisterUserIn, db=Db) -> RegisterUserOut:
+async def register_translator(payload: RegisterUserIn, db: Db) -> RegisterUserOut:
     """Register a new translator account."""
-    repo = UserRepository(db)
+    repo: UserRepository = UserRepository(db)
     await repo.ensure_indexes()
 
     from app.security.passwords import hash_password
 
-    user = User(
+    user: User = User(
         id=uuid4(),
         name=payload.name,
         email_address=payload.email_address,
@@ -123,7 +123,7 @@ async def register_translator(payload: RegisterUserIn, db=Db) -> RegisterUserOut
 
 
 @router.get("/{user_id}", response_model=RegisterUserOut)
-async def get_user(user_id: UUID, db=Db) -> RegisterUserOut:
+async def get_user(user_id: UUID, db: Db) -> RegisterUserOut:
     """Get a user by id.
 
     Args:
@@ -136,8 +136,8 @@ async def get_user(user_id: UUID, db=Db) -> RegisterUserOut:
     Raises:
         HTTPException: If not found.
     """
-    repo = UserRepository(db)
-    user = await repo.get_by_id(user_id)
+    repo: UserRepository = UserRepository(db)
+    user: User | None = await repo.get_by_id(user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -164,8 +164,8 @@ def _assert_language_access(*, current_user: User, translator_id: UUID) -> None:
 @router.get("/translators/{translator_id}/languages", response_model=TranslatorLanguagesOut)
 async def list_translator_languages(
     translator_id: UUID,
-    db=Db,
-    current_user: User = CurrentUser,
+    db: Db,
+    current_user: CurrentUser,
 ) -> TranslatorLanguagesOut:
     """List languages configured for a translator.
 
@@ -183,16 +183,16 @@ async def list_translator_languages(
     """
     _assert_language_access(current_user=current_user, translator_id=translator_id)
 
-    users = UserRepository(db)
-    translator = await users.get_by_id(translator_id)
+    users: UserRepository = UserRepository(db)
+    translator: User | None = await users.get_by_id(translator_id)
     if translator is None or translator.role != UserRole.TRANSLATOR:
         raise HTTPException(status_code=404, detail="Translator not found")
 
-    tl_repo = TranslatorLanguageRepository(db)
+    tl_repo: TranslatorLanguageRepository = TranslatorLanguageRepository(db)
     await tl_repo.ensure_indexes()
 
-    langs = await tl_repo.list_languages_for_translator(str(translator_id))
-    langs_sorted = sorted({l.lower() for l in langs})
+    langs: list[str] = await tl_repo.list_languages_for_translator(str(translator_id))
+    langs_sorted: list[str] = sorted({l.lower() for l in langs})
     return TranslatorLanguagesOut(translator_id=translator_id, languages=langs_sorted)
 
 
@@ -200,21 +200,21 @@ async def list_translator_languages(
 async def add_translator_language(
     translator_id: UUID,
     payload: AddTranslatorLanguageIn,
-    db=Db,
-    current_user: User = CurrentUser,
+    db: Db,
+    current_user: CurrentUser,
 ) -> TranslatorLanguageOut:
     """Add a language for a translator."""
     _assert_language_access(current_user=current_user, translator_id=translator_id)
 
-    users = UserRepository(db)
-    translator = await users.get_by_id(translator_id)
+    users: UserRepository = UserRepository(db)
+    translator: User | None = await users.get_by_id(translator_id)
     if translator is None or translator.role != UserRole.TRANSLATOR:
         raise HTTPException(status_code=404, detail="Translator not found")
 
-    tl_repo = TranslatorLanguageRepository(db)
+    tl_repo: TranslatorLanguageRepository = TranslatorLanguageRepository(db)
     await tl_repo.ensure_indexes()
 
-    tl = TranslatorLanguage(translator_id=translator_id, language_code=payload.language_code.lower())
+    tl: TranslatorLanguage = TranslatorLanguage(translator_id=translator_id, language_code=payload.language_code.lower())
     await tl_repo.add_language(tl)
 
     return TranslatorLanguageOut(translator_id=translator_id, language_code=tl.language_code)
@@ -224,21 +224,21 @@ async def add_translator_language(
 async def delete_translator_language(
     translator_id: UUID,
     language_code: str,
-    db=Db,
-    current_user: User = CurrentUser,
+    db: Db,
+    current_user: CurrentUser,
 ) -> None:
     """Remove a language from a translator."""
     _assert_language_access(current_user=current_user, translator_id=translator_id)
 
-    users = UserRepository(db)
-    translator = await users.get_by_id(translator_id)
+    users: UserRepository = UserRepository(db)
+    translator: User | None = await users.get_by_id(translator_id)
     if translator is None or translator.role != UserRole.TRANSLATOR:
         raise HTTPException(status_code=404, detail="Translator not found")
 
     if len(language_code) != 2:
         raise HTTPException(status_code=422, detail="Invalid language code")
 
-    tl_repo = TranslatorLanguageRepository(db)
+    tl_repo: TranslatorLanguageRepository = TranslatorLanguageRepository(db)
     await tl_repo.ensure_indexes()
     await tl_repo.delete_language(translator_id=str(translator_id), language_code=language_code.lower())
 

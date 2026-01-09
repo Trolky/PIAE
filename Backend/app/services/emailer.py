@@ -20,9 +20,9 @@ class EmailService:
 
     def __init__(self, *, host: str | None = None, port: int | None = None, mail_from: str | None = None) -> None:
         """Initialize the email service."""
-        self._host = host or settings.smtp_host
-        self._port = port or settings.smtp_port
-        self._from = mail_from or settings.smtp_from
+        self._host: str = host or settings.smtp_host
+        self._port: int = port or settings.smtp_port
+        self._from: str = mail_from or settings.smtp_from
 
     def send(self, *, to: str, subject: str, text: str) -> None:
         """Send a plaintext email.
@@ -32,7 +32,7 @@ class EmailService:
             subject: Email subject.
             text: Email body.
         """
-        msg = EmailMessage()
+        msg: EmailMessage = EmailMessage()
         msg["From"] = self._from
         msg["To"] = to
         msg["Subject"] = subject

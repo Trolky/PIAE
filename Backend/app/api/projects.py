@@ -1,30 +1,31 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import Any, Optional, Mapping
 from uuid import UUID
 
 from bson import ObjectId
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
+from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCursor
 from pydantic import BaseModel, Field
 
 from app.api.deps import CurrentUser, Db
 from app.core.config import settings
 from app.db.gridfs import GridFsService
 from app.domain.enums import UserRole
-from app.domain.models import Project, User
+from app.domain.models import Project, User, Feedback
 from app.repositories.feedback import FeedbackRepository
 from app.repositories.projects import ProjectRepository
 from app.repositories.translator_languages import TranslatorLanguageRepository
 from app.repositories.users import UserRepository
 from app.services.emailer import EmailService
-from app.services.project_review import ProjectReviewService
-from app.services.project_service import ProjectService
+from app.services.project_review import ProjectReviewService, ReviewResult
+from app.services.project_service import ProjectService, CreateProjectResult
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/projects", tags=["projects"])
+router: APIRouter = APIRouter(prefix="/projects", tags=["projects"])
 
 
 class ProjectOut(BaseModel):
@@ -69,7 +70,7 @@ class AdminFeedbackProjectOut(BaseModel):
     created_at: str | None = None
 
 
-async def _map_gridfs_filenames(db, file_ids: list[str]) -> dict[str, str]:
+async def _map_gridfs_filenames(db: AsyncIOMotorDatabase[Any], file_ids: list[str]) -> dict[str, str]:
     """Batch map GridFS file ids to filenames.
 
     Args:
@@ -90,8 +91,8 @@ async def _map_gridfs_filenames(db, file_ids: list[str]) -> dict[str, str]:
     if not oids:
         return {}
 
-    cursor = db["files.files"].find({"_id": {"$in": oids}}, projection={"filename": 1})
-    docs = await cursor.to_list(length=len(oids))
+    cursor: AsyncIOMotorCursor[Mapping[str, Any]]  = db["files.files"].find({"_id": {"$in": oids}}, projection={"filename": 1})
+    docs: list[Mapping[str, Any]] = await cursor.to_list(length=len(oids))
     return {str(d["_id"]): d.get("filename") for d in docs if d.get("filename")}
 
 
@@ -99,8 +100,8 @@ async def _map_gridfs_filenames(db, file_ids: list[str]) -> dict[str, str]:
 async def create_project(
     language_code: str = Form(..., min_length=2, max_length=2),
     original_file: UploadFile = File(...),
-    db=Db,
-    current_user: User = CurrentUser,
+    db: Db = None,
+    current_user: CurrentUser = None,
 ) -> ProjectOut:
     """Create a new translation project and assign a translator.
 
@@ -119,15 +120,15 @@ async def create_project(
     Raises:
         HTTPException: If user role is not CUSTOMER or upload is too large.
     """
-    content = await original_file.read()
+    content: bytes = await original_file.read()
 
-    project_repo = ProjectRepository(db)
-    translator_lang_repo = TranslatorLanguageRepository(db)
-    user_repo = UserRepository(db)
-    fs = GridFsService(db)
-    mailer = EmailService()
+    project_repo: ProjectRepository = ProjectRepository(db)
+    translator_lang_repo: TranslatorLanguageRepository = TranslatorLanguageRepository(db)
+    user_repo: UserRepository = UserRepository(db)
+    fs: GridFsService = GridFsService(db)
+    mailer: EmailService = EmailService()
 
-    svc = ProjectService(
+    svc: ProjectService = ProjectService(
         project_repo=project_repo,
         translator_lang_repo=translator_lang_repo,
         user_repo=user_repo,
@@ -135,7 +136,7 @@ async def create_project(
         mailer=mailer,
     )
 
-    result = await svc.create_project(
+    result: CreateProjectResult = await svc.create_project(
         customer=current_user,
         language_code=language_code,
         original_filename=original_file.filename or "upload.bin",
@@ -143,7 +144,7 @@ async def create_project(
         content=content,
     )
 
-    p = result.project
+    p: Project = result.project
     return ProjectOut(
         id=p.id,
         customer_id=p.customer_id,
@@ -154,7 +155,7 @@ async def create_project(
 
 
 @router.get("/{project_id}/original")
-async def download_original_file(project_id: UUID, db=Db, current_user: User = CurrentUser):
+async def download_original_file(project_id: UUID, db: Db, current_user: CurrentUser) -> Response:
     """Download the original file for a project.
 
     Access rules:
@@ -172,8 +173,8 @@ async def download_original_file(project_id: UUID, db=Db, current_user: User = C
     Raises:
         HTTPException: If project/file is not found or access is denied.
     """
-    repo = ProjectRepository(db)
-    project = await repo.get_by_id(project_id)
+    repo: ProjectRepository = ProjectRepository(db)
+    project: Project | None = await repo.get_by_id(project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
 
@@ -183,23 +184,23 @@ async def download_original_file(project_id: UUID, db=Db, current_user: User = C
         raise HTTPException(status_code=403, detail="Not allowed")
 
     try:
-        oid = ObjectId(project.original_file_id)
+        oid: ObjectId = ObjectId(project.original_file_id)
     except Exception:
         raise HTTPException(status_code=500, detail="Invalid file id")
 
-    fs = GridFsService(db)
+    fs: GridFsService = GridFsService(db)
     data, info = await fs.download(oid)
 
-    metadata = info.get("metadata") or {}
-    content_type = metadata.get("content_type") or "application/octet-stream"
-    filename = info.get("filename") or "download.bin"
+    metadata: dict = info.get("metadata") or dict()
+    content_type: str | None = metadata.get("content_type") or "application/octet-stream"
+    filename: str | None = info.get("filename") or "download.bin"
 
-    headers = {"Content-Disposition": f"attachment; filename=\"{filename}\""}
+    headers: dict[str, str] = {"Content-Disposition": f"attachment; filename=\"{filename}\""}
     return Response(content=data, media_type=content_type, headers=headers)
 
 
 @router.get("/{project_id}", response_model=Project)
-async def get_project(project_id: UUID, db=Db, current_user: User = CurrentUser) -> Project:
+async def get_project(project_id: UUID, db: Db, current_user: CurrentUser) -> Project:
     """Get a project by id.
 
     Access rules:
@@ -214,8 +215,8 @@ async def get_project(project_id: UUID, db=Db, current_user: User = CurrentUser)
     Returns:
         Project: Full project model.
     """
-    repo = ProjectRepository(db)
-    project = await repo.get_by_id(project_id)
+    repo: ProjectRepository = ProjectRepository(db)
+    project: Project | None = await repo.get_by_id(project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
 
@@ -228,7 +229,7 @@ async def get_project(project_id: UUID, db=Db, current_user: User = CurrentUser)
 
 
 @router.get("", response_model=list[ProjectListItemOut])
-async def list_projects(db=Db, current_user: User = CurrentUser) -> list[ProjectListItemOut]:
+async def list_projects(db: Db, current_user: CurrentUser) -> list[ProjectListItemOut]:
     """List projects for the current user.
 
     Behavior:
@@ -242,15 +243,15 @@ async def list_projects(db=Db, current_user: User = CurrentUser) -> list[Project
     Returns:
         list[ProjectListItemOut]: Project list rows.
     """
-    project_repo = ProjectRepository(db)
-    user_repo = UserRepository(db)
+    project_repo: ProjectRepository = ProjectRepository(db)
+    user_repo: UserRepository = UserRepository(db)
 
     if current_user.role == UserRole.CUSTOMER:
-        projects = await project_repo.list_by_customer(current_user.id)
-        translator_ids = sorted({p.translator_id for p in projects if p.translator_id is not None})
-        translator_names = await user_repo.map_ids_to_names(translator_ids) if translator_ids else {}
+        projects: list[Project]= await project_repo.list_by_customer(current_user.id)
+        translator_ids: list[UUID] = sorted({p.translator_id for p in projects if p.translator_id is not None})
+        translator_names: dict[str, str] = await user_repo.map_ids_to_names(translator_ids) if translator_ids else dict()
 
-        file_name_map = await _map_gridfs_filenames(db, [p.original_file_id for p in projects])
+        file_name_map: dict[str, str] = await _map_gridfs_filenames(db, [p.original_file_id for p in projects])
 
         return [
             ProjectListItemOut(
@@ -269,8 +270,8 @@ async def list_projects(db=Db, current_user: User = CurrentUser) -> list[Project
 
     if current_user.role == UserRole.TRANSLATOR:
         projects = await project_repo.list_by_translator(current_user.id)
-        customer_ids = sorted({p.customer_id for p in projects})
-        customer_names = await user_repo.map_ids_to_names(customer_ids) if customer_ids else {}
+        customer_ids: list[UUID] = sorted({p.customer_id for p in projects})
+        customer_names: dict[str, str] = await user_repo.map_ids_to_names(customer_ids) if customer_ids else dict()
 
         file_name_map = await _map_gridfs_filenames(db, [p.original_file_id for p in projects])
 
@@ -296,8 +297,8 @@ async def list_projects(db=Db, current_user: User = CurrentUser) -> list[Project
 async def submit_translation(
     project_id: UUID,
     translated_file: UploadFile = File(...),
-    db=Db,
-    current_user: User = CurrentUser,
+    db: Db = None,
+    current_user: CurrentUser = None,
 ) -> None:
     """Upload translated file for an assigned project.
 
@@ -317,8 +318,8 @@ async def submit_translation(
     if current_user.role != UserRole.TRANSLATOR:
         raise HTTPException(status_code=403, detail="Only translators can submit translations")
 
-    repo = ProjectRepository(db)
-    project = await repo.get_by_id(project_id)
+    repo: ProjectRepository = ProjectRepository(db)
+    project: Project | None = await repo.get_by_id(project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
 
@@ -328,19 +329,19 @@ async def submit_translation(
     if project.state not in ("ASSIGNED", "COMPLETED") and getattr(project.state, "value", None) not in ("ASSIGNED", "COMPLETED"):
         raise HTTPException(status_code=409, detail="Project is not in a state that allows translation upload")
 
-    max_bytes = settings.max_upload_mb * 1024 * 1024
-    content = await translated_file.read()
+    max_bytes: int = settings.max_upload_mb * 1024 * 1024
+    content: bytes = await translated_file.read()
     if len(content) > max_bytes:
         raise HTTPException(status_code=413, detail=f"Max upload size is {settings.max_upload_mb} MB")
 
-    fs = GridFsService(db)
-    file_id = await fs.upload(
+    fs: GridFsService = GridFsService(db)
+    file_id: ObjectId = await fs.upload(
         filename=translated_file.filename or "translation.bin",
         data=content,
         metadata={"content_type": translated_file.content_type or "application/octet-stream"},
     )
 
-    ok = await repo.submit_translation(
+    ok: bool = await repo.submit_translation(
         project_id=project_id,
         translator_id=current_user.id,
         translated_file_id=str(file_id),
@@ -348,8 +349,8 @@ async def submit_translation(
     if not ok:
         raise HTTPException(status_code=409, detail="Failed to update project")
 
-    users = UserRepository(db)
-    customer = await users.get_by_id(project.customer_id)
+    users: UserRepository = UserRepository(db)
+    customer: User | None = await users.get_by_id(project.customer_id)
     if customer is not None:
         EmailService().send(
             to=str(customer.email_address),
@@ -365,7 +366,7 @@ async def submit_translation(
 
 
 @router.get("/{project_id}/translated")
-async def download_translated_file(project_id: UUID, db=Db, current_user: User = CurrentUser):
+async def download_translated_file(project_id: UUID, db: Db, current_user: CurrentUser) -> Response:
     """Download the translated file for a project.
 
     Access rules:
@@ -383,8 +384,8 @@ async def download_translated_file(project_id: UUID, db=Db, current_user: User =
     Raises:
         HTTPException: If file does not exist, project not found, or access is denied.
     """
-    repo = ProjectRepository(db)
-    project = await repo.get_by_id(project_id)
+    repo: ProjectRepository = ProjectRepository(db)
+    project: Project | None = await repo.get_by_id(project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
 
@@ -397,18 +398,18 @@ async def download_translated_file(project_id: UUID, db=Db, current_user: User =
         raise HTTPException(status_code=404, detail="Translated file not found")
 
     try:
-        oid = ObjectId(project.translated_file_id)
+        oid: ObjectId = ObjectId(project.translated_file_id)
     except Exception:
         raise HTTPException(status_code=500, detail="Invalid file id")
 
-    fs = GridFsService(db)
+    fs: GridFsService = GridFsService(db)
     data, info = await fs.download(oid)
 
-    metadata = info.get("metadata") or {}
-    content_type = metadata.get("content_type") or "application/octet-stream"
-    filename = info.get("filename") or "translated.bin"
+    metadata: dict = info.get("metadata") or dict()
+    content_type: str | None = metadata.get("content_type") or "application/octet-stream"
+    filename: str = info.get("filename") or "translated.bin"
 
-    headers = {"Content-Disposition": f"attachment; filename=\"{filename}\""}
+    headers: dict[str, str] = {"Content-Disposition": f"attachment; filename=\"{filename}\""}
     return Response(content=data, media_type=content_type, headers=headers)
 
 
@@ -425,7 +426,7 @@ class RejectIn(BaseModel):
 
 
 @router.post("/{project_id}/approve", status_code=204)
-async def approve_project(project_id: UUID, payload: ApproveIn, db=Db, current_user: User = CurrentUser) -> None:
+async def approve_project(project_id: UUID, payload: ApproveIn, db: Db, current_user: CurrentUser) -> None:
     """Approve a completed translation and optionally submit feedback.
 
     Also notifies the translator by email.
@@ -442,18 +443,18 @@ async def approve_project(project_id: UUID, payload: ApproveIn, db=Db, current_u
     if current_user.role != UserRole.CUSTOMER:
         raise HTTPException(status_code=403, detail="Only customers can approve")
 
-    repo = ProjectRepository(db)
-    feedback_repo = FeedbackRepository(db)
-    svc = ProjectReviewService(repo, feedback_repo)
+    repo: ProjectRepository = ProjectRepository(db)
+    feedback_repo: FeedbackRepository = FeedbackRepository(db)
+    svc: ProjectReviewService = ProjectReviewService(repo, feedback_repo)
 
-    res = await svc.approve(project_id=project_id, customer_id=current_user.id, text=payload.text)
+    res: ReviewResult | None = await svc.approve(project_id=project_id, customer_id=current_user.id, text=payload.text)
     if res is None:
         raise HTTPException(status_code=409, detail="Project is not in COMPLETED state")
 
-    project = await repo.get_by_id(project_id)
+    project: Project | None = await repo.get_by_id(project_id)
     if project and project.translator_id:
-        users = UserRepository(db)
-        translator = await users.get_by_id(project.translator_id)
+        users: UserRepository = UserRepository(db)
+        translator: User | None = await users.get_by_id(project.translator_id)
         if translator is not None:
             EmailService().send(
                 to=str(translator.email_address),
@@ -469,7 +470,7 @@ async def approve_project(project_id: UUID, payload: ApproveIn, db=Db, current_u
 
 
 @router.post("/{project_id}/reject", status_code=204)
-async def reject_project(project_id: UUID, payload: RejectIn, db=Db, current_user: User = CurrentUser) -> None:
+async def reject_project(project_id: UUID, payload: RejectIn, db: Db, current_user: CurrentUser) -> None:
     """Reject a completed translation and submit feedback.
 
     Also notifies the translator by email.
@@ -486,18 +487,18 @@ async def reject_project(project_id: UUID, payload: RejectIn, db=Db, current_use
     if current_user.role != UserRole.CUSTOMER:
         raise HTTPException(status_code=403, detail="Only customers can reject")
 
-    repo = ProjectRepository(db)
-    feedback_repo = FeedbackRepository(db)
-    svc = ProjectReviewService(repo, feedback_repo)
+    repo: ProjectRepository = ProjectRepository(db)
+    feedback_repo: FeedbackRepository = FeedbackRepository(db)
+    svc: ProjectReviewService = ProjectReviewService(repo, feedback_repo)
 
-    res = await svc.reject(project_id=project_id, customer_id=current_user.id, text=payload.text)
+    res: ReviewResult | None = await svc.reject(project_id=project_id, customer_id=current_user.id, text=payload.text)
     if res is None:
         raise HTTPException(status_code=409, detail="Project is not in COMPLETED state")
 
-    project = await repo.get_by_id(project_id)
+    project: Project | None= await repo.get_by_id(project_id)
     if project and project.translator_id:
-        users = UserRepository(db)
-        translator = await users.get_by_id(project.translator_id)
+        users: UserRepository = UserRepository(db)
+        translator: User | None = await users.get_by_id(project.translator_id)
         if translator is not None:
             EmailService().send(
                 to=str(translator.email_address),
@@ -515,8 +516,8 @@ async def reject_project(project_id: UUID, payload: RejectIn, db=Db, current_use
 @router.get("/admin/feedback", response_model=list[AdminFeedbackProjectOut])
 async def admin_list_projects_with_feedback(
     state: str | None = None,
-    db=Db,
-    current_user: User = CurrentUser,
+    db: Db = None,
+    current_user: CurrentUser = None,
 ) -> list[AdminFeedbackProjectOut]:
     """List projects with feedback for administrator view.
 
@@ -534,34 +535,37 @@ async def admin_list_projects_with_feedback(
     if current_user.role != UserRole.ADMINISTRATOR:
         raise HTTPException(status_code=403, detail="Only administrators")
 
-    user_repo = UserRepository(db)
-    fb_repo = FeedbackRepository(db)
+    user_repo: UserRepository = UserRepository(db)
+    fb_repo: FeedbackRepository = FeedbackRepository(db)
 
-    query: dict = {"$or": [{"feedback_id": {"$exists": True, "$ne": None}}, {"feedback": {"$ne": None}}]}
+    query: dict[str, Any] = {"$or": [{"feedback_id": {"$exists": True, "$ne": None}}, {"feedback": {"$ne": None}}]}
     if state:
         query["state"] = state
 
-    cursor = db["projects"].find(query).sort("created_at", -1)
-    docs = await cursor.to_list(length=200)
-    projects = [Project.model_validate(d) for d in docs]
+    cursor: AsyncIOMotorCursor[Mapping[str, Any]] = db["projects"].find(query).sort("created_at", -1)
+    docs: list[Mapping[str, Any]] = await cursor.to_list(length=200)
+    projects: list[Project] = [Project.model_validate(d) for d in docs]
 
-    customer_ids = sorted({p.customer_id for p in projects})
-    translator_ids = sorted({p.translator_id for p in projects if p.translator_id is not None})
+    customer_ids: list[UUID] = sorted({p.customer_id for p in projects})
+    translator_ids: list[UUID] = sorted({p.translator_id for p in projects if p.translator_id is not None})
 
-    customers = {str(u.id): u for u in await user_repo.list_by_ids(customer_ids)} if customer_ids else {}
-    translators = {str(u.id): u for u in await user_repo.list_by_ids(translator_ids)} if translator_ids else {}
+    customers: dict[str, User] = {str(u.id): u for u in await user_repo.list_by_ids(customer_ids)} if customer_ids else {}
+    translators: dict[str, User] = {str(u.id): u for u in await user_repo.list_by_ids(translator_ids)} if translator_ids else {}
 
     out: list[AdminFeedbackProjectOut] = []
     for p in projects:
-        fb_text = None
-        if getattr(p, "feedback", None) is not None:
-            fb_text = p.feedback.text
+        fb_text: str | None = None
+
+        # prefer explicit feedback_id reference if present; otherwise fallback to lookup by project_id
+        if p.feedback_id is not None:
+            fb: Feedback | None = await fb_repo.get_by_project_id(p.id)
+            fb_text = fb.text if fb else None
         else:
             fb = await fb_repo.get_by_project_id(p.id)
             fb_text = fb.text if fb else None
 
-        cu = customers.get(str(p.customer_id))
-        tu = translators.get(str(p.translator_id)) if p.translator_id else None
+        cu: User | None = customers.get(str(p.customer_id))
+        tu: User | None = translators.get(str(p.translator_id)) if p.translator_id else None
 
         out.append(
             AdminFeedbackProjectOut(
@@ -594,8 +598,8 @@ class AdminMessageIn(BaseModel):
 async def admin_send_message(
     project_id: UUID,
     payload: AdminMessageIn,
-    db=Db,
-    current_user: User = CurrentUser,
+    db: Db = None,
+    current_user: CurrentUser = None,
 ) -> None:
     """Send an admin message to customer or translator.
 
@@ -611,16 +615,16 @@ async def admin_send_message(
     if current_user.role != UserRole.ADMINISTRATOR:
         raise HTTPException(status_code=403, detail="Only administrators")
 
-    repo = ProjectRepository(db)
-    project = await repo.get_by_id(project_id)
+    repo: ProjectRepository = ProjectRepository(db)
+    project: Project | None = await repo.get_by_id(project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    users = UserRepository(db)
-    customer = await users.get_by_id(project.customer_id)
-    translator = await users.get_by_id(project.translator_id) if project.translator_id else None
+    users: UserRepository = UserRepository(db)
+    customer: User | None = await users.get_by_id(project.customer_id)
+    translator: User | None = await users.get_by_id(project.translator_id) if project.translator_id else None
 
-    target = (payload.to or "").lower()
+    target: str = (payload.to or "").lower()
     if target == "customer":
         if customer is None:
             raise HTTPException(status_code=404, detail="Customer not found")
@@ -645,7 +649,7 @@ async def admin_send_message(
 
 
 @router.post("/admin/projects/{project_id}/close", status_code=204)
-async def admin_close_project(project_id: UUID, db=Db, current_user: User = CurrentUser) -> None:
+async def admin_close_project(project_id: UUID, db: Db, current_user: CurrentUser) -> None:
     """Close a project as an administrator.
 
     Notifies both customer and translator by email (if present).
@@ -661,16 +665,16 @@ async def admin_close_project(project_id: UUID, db=Db, current_user: User = Curr
     if current_user.role != UserRole.ADMINISTRATOR:
         raise HTTPException(status_code=403, detail="Only administrators")
 
-    repo = ProjectRepository(db)
-    project = await repo.get_by_id(project_id)
+    repo: ProjectRepository = ProjectRepository(db)
+    project: Project | None = await repo.get_by_id(project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
 
     await repo.close_project(project_id)
 
-    users = UserRepository(db)
-    customer = await users.get_by_id(project.customer_id)
-    translator = await users.get_by_id(project.translator_id) if project.translator_id else None
+    users: UserRepository = UserRepository(db)
+    customer: User | None = await users.get_by_id(project.customer_id)
+    translator: User | None = await users.get_by_id(project.translator_id) if project.translator_id else None
 
     mailer = EmailService()
     if customer is not None:

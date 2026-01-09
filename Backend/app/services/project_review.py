@@ -40,8 +40,8 @@ class ProjectReviewService:
 
     def __init__(self, project_repo: ProjectRepository, feedback_repo: FeedbackRepository) -> None:
         """Initialize the service."""
-        self._project_repo = project_repo
-        self._feedback_repo = feedback_repo
+        self._project_repo: ProjectRepository = project_repo
+        self._feedback_repo: FeedbackRepository = feedback_repo
 
     async def approve(self, *, project_id: UUID, customer_id: UUID, text: str = "") -> Optional[ReviewResult]:
         """Approve a completed translation.
@@ -54,10 +54,10 @@ class ProjectReviewService:
         Returns:
             ReviewResult | None: Result with new_state, or None if state transition is not allowed.
         """
-        fb = Feedback(project_id=project_id, text=text or "", created_at=utc_now())
+        fb: Feedback = Feedback(project_id=project_id, text=text or "", created_at=utc_now())
         fb = await self._feedback_repo.upsert_for_project(fb)
 
-        ok = await self._project_repo.set_feedback_and_state_if_customer(
+        ok: bool = await self._project_repo.set_feedback_and_state_if_customer(
             project_id=project_id,
             customer_id=customer_id,
             expected_state=ProjectState.COMPLETED.value,
@@ -87,10 +87,10 @@ class ProjectReviewService:
         if not (text or "").strip():
             return None
 
-        fb = Feedback(project_id=project_id, text=text, created_at=utc_now())
+        fb: Feedback = Feedback(project_id=project_id, text=text, created_at=utc_now())
         fb = await self._feedback_repo.upsert_for_project(fb)
 
-        ok = await self._project_repo.set_feedback_and_state_if_customer(
+        ok: bool = await self._project_repo.set_feedback_and_state_if_customer(
             project_id=project_id,
             customer_id=customer_id,
             expected_state=ProjectState.COMPLETED.value,

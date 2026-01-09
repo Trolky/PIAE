@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Optional
 from uuid import UUID, uuid4
 
+from bson import ObjectId
 from fastapi import HTTPException
 
 from app.core.config import settings
@@ -69,11 +70,11 @@ class ProjectService:
             gridfs: GridFS helper.
             mailer: Email service.
         """
-        self._project_repo = project_repo
-        self._translator_lang_repo = translator_lang_repo
-        self._user_repo = user_repo
-        self._gridfs = gridfs
-        self._mailer = mailer
+        self._project_repo: ProjectRepository = project_repo
+        self._translator_lang_repo: TranslatorLanguageRepository = translator_lang_repo
+        self._user_repo: UserRepository = user_repo
+        self._gridfs: GridFsService = gridfs
+        self._mailer: EmailService = mailer
 
     async def create_project(
         self,
@@ -102,19 +103,17 @@ class ProjectService:
         if customer.role != UserRole.CUSTOMER:
             raise HTTPException(status_code=403, detail="Only customers can create projects")
 
-        max_bytes = settings.max_upload_mb * 1024 * 1024
+        max_bytes: int = settings.max_upload_mb * 1024 * 1024
         if len(content) > max_bytes:
             raise HTTPException(status_code=413, detail=f"Max upload size is {settings.max_upload_mb} MB")
 
-        # 1) upload do GridFS
-        file_id = await self._gridfs.upload(
+        file_id: ObjectId = await self._gridfs.upload(
             filename=original_filename or "upload.bin",
             data=content,
             metadata={"content_type": content_type or "application/octet-stream"},
         )
 
-        # 2) vytvoření projektu
-        project = Project(
+        project: Project = Project(
             id=uuid4(),
             customer_id=customer.id,
             translator_id=None,
@@ -135,13 +134,11 @@ class ProjectService:
             },
         )
 
-        # 3) přiřazení / uzavření (FR2)
-        assignment = ProjectAssignmentService(self._project_repo, self._translator_lang_repo)
-        translator_id = await assignment.assign_or_close(project.id, project.language_code)
+        assignment: ProjectAssignmentService = ProjectAssignmentService(self._project_repo, self._translator_lang_repo)
+        translator_id: UUID | None= await assignment.assign_or_close(project.id, project.language_code)
 
-        # 4) email notifikace (FR2)
         if translator_id is not None:
-            translator = await self._user_repo.get_by_id(translator_id)
+            translator: User | None = await self._user_repo.get_by_id(translator_id)
             if translator is not None:
                 self._mailer.send(
                     to=str(translator.email_address),
@@ -154,7 +151,7 @@ class ProjectService:
                     ),
                 )
         else:
-            refreshed_customer = await self._user_repo.get_by_id(customer.id)
+            refreshed_customer: User | None = await self._user_repo.get_by_id(customer.id)
             if refreshed_customer is not None:
                 self._mailer.send(
                     to=str(refreshed_customer.email_address),
@@ -167,6 +164,6 @@ class ProjectService:
                     ),
                 )
 
-        stored = await self._project_repo.get_by_id(project.id)
+        stored: Project | None = await self._project_repo.get_by_id(project.id)
         assert stored is not None
         return CreateProjectResult(project=stored, assigned_translator_id=translator_id)

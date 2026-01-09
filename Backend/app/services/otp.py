@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 
 import pyotp
+from pyotp import TOTP
 
 from app.core.config import settings
 
@@ -44,8 +45,8 @@ def verify_totp_secret(*, secret: str, code: str) -> bool:
     if not code.isdigit():
         return False
 
-    totp = totp_from_secret(secret)
-    ok = totp.verify(code, valid_window=settings.otp_valid_window)
+    totp: TOTP = totp_from_secret(secret)
+    ok: bool = totp.verify(code, valid_window=settings.otp_valid_window)
     logger.info("TOTP verify", extra={"ok": ok})
     return bool(ok)
 
@@ -60,5 +61,5 @@ def provisioning_uri_from_secret(*, secret: str, username: str) -> str:
     Returns:
         str: otpauth URI.
     """
-    totp = totp_from_secret(secret)
+    totp: TOTP = totp_from_secret(secret)
     return totp.provisioning_uri(name=username, issuer_name=settings.otp_issuer)

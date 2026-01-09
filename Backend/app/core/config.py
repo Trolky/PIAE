@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -36,7 +38,7 @@ class Settings(BaseSettings):
     max_upload_mb: int = 5
 
     # JWT
-    jwt_secret: str = "change-me"  # Override in env for production
+    jwt_secret: str = os.environ.get("JWT_SECRET", "jwt-secret-for-dev-only")
     jwt_algorithm: str = "HS256"
     jwt_access_token_exp_minutes: int = 60
 
@@ -46,10 +48,13 @@ class Settings(BaseSettings):
     smtp_from: str = "no-reply@piae.local"
 
     # OTP (TOTP) - second authentication method
-    otp_master_secret: str = "change-me-otp"  # Override in env for stable OTP
+    otp_master_secret: str = os.environ.get("OTP_MASTER_SECRET", "otp-master-secret-for-dev-only")
     otp_issuer: str = "PIAE"
     otp_interval_seconds: int = 30
     otp_valid_window: int = 1
 
 
-settings = Settings()
+settings = Settings()  # loads env/.env via pydantic-settings
+
+if not settings.jwt_secret or not settings.otp_master_secret:
+    raise RuntimeError("Missing required secrets: JWT_SECRET and/or OTP_MASTER_SECRET")

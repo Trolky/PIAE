@@ -38,33 +38,32 @@
         </div>
       </div>
     </div>
-
-    <div class="card" style="margin-top:16px;">
-      <h2 style="margin-top:0;">{% trans "Send message" %}</h2>
-      <form method="post" class="form">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="send" />
-
-        <div class="field {% if form.to.errors %}field--error{% endif %}">
-          <label class="field__label">{{ form.to.label }}</label>
-          <div class="field__control">{{ form.to }}</div>
-        </div>
-
-        <div class="field {% if form.subject.errors %}field--error{% endif %}">
-          <label class="field__label">{{ form.subject.label }}</label>
-          <div class="field__control">{{ form.subject }}</div>
-        </div>
-
-        <div class="field {% if form.text.errors %}field--error{% endif %}">
-          <label class="field__label">{{ form.text.label }}</label>
-          <div class="field__control">{{ form.text }}</div>
-        </div>
-
-        <button class="button" type="submit">{% trans "Send" %}</button>
-      </form>
-    </div>
-
     {% if project.state != 'CLOSED' %}
+      <div class="card" style="margin-top:16px;">
+        <h2 style="margin-top:0;">{% trans "Send message" %}</h2>
+        <form method="post" class="form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="send" />
+
+          <div class="field {% if form.to.errors %}field--error{% endif %}">
+            <label class="field__label">{{ form.to.label }}</label>
+            <div class="field__control">{{ form.to }}</div>
+          </div>
+
+          <div class="field {% if form.subject.errors %}field--error{% endif %}">
+            <label class="field__label">{{ form.subject.label }}</label>
+            <div class="field__control">{{ form.subject }}</div>
+          </div>
+
+          <div class="field {% if form.text.errors %}field--error{% endif %}">
+            <label class="field__label">{{ form.text.label }}</label>
+            <div class="field__control">{{ form.text }}</div>
+          </div>
+
+          <button class="button" type="submit">{% trans "Send" %}</button>
+        </form>
+      </div>
+
       <div class="card" style="margin-top:16px;">
         <h2 style="margin-top:0;">{% trans "Close project" %}</h2>
         <form method="post">

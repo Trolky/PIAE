@@ -6,11 +6,11 @@ from uuid import UUID
 
 from app.api.deps import CurrentUser, Db
 from app.domain.enums import UserRole
-from app.domain.models import User
+from app.domain.models import Project, Feedback
 from app.repositories.feedback import FeedbackRepository
 from app.repositories.projects import ProjectRepository
 
-router = APIRouter(prefix="/feedback", tags=["feedback"])
+router: APIRouter = APIRouter(prefix="/feedback", tags=["feedback"])
 
 
 class FeedbackOut(BaseModel):
@@ -22,7 +22,7 @@ class FeedbackOut(BaseModel):
 
 
 @router.get("/projects/{project_id}", response_model=FeedbackOut)
-async def get_feedback_by_project(project_id: UUID, db=Db, current_user: User = CurrentUser) -> FeedbackOut:
+async def get_feedback_by_project(project_id: UUID, db: Db, current_user: CurrentUser) -> FeedbackOut:
     """Get feedback for a project.
 
     Access rules:
@@ -41,8 +41,8 @@ async def get_feedback_by_project(project_id: UUID, db=Db, current_user: User = 
         HTTPException: If project/feedback is not found or access is denied.
     """
 
-    proj_repo = ProjectRepository(db)
-    project = await proj_repo.get_by_id(project_id)
+    proj_repo: ProjectRepository = ProjectRepository(db)
+    project: Project | None = await proj_repo.get_by_id(project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
 
@@ -51,8 +51,8 @@ async def get_feedback_by_project(project_id: UUID, db=Db, current_user: User = 
     if current_user.role == UserRole.TRANSLATOR and project.translator_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not allowed")
 
-    repo = FeedbackRepository(db)
-    feedback = await repo.get_by_project_id(project_id)
+    repo: FeedbackRepository = FeedbackRepository(db)
+    feedback: Feedback | None = await repo.get_by_project_id(project_id)
     if feedback is None:
         raise HTTPException(status_code=404, detail="Feedback not found")
 

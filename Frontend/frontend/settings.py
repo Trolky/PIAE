@@ -16,17 +16,17 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "dev-secret-key-change-me"
-DEBUG = True
+SECRET_KEY: str = "dev-secret-key-change-me"
+DEBUG: bool = True
 ALLOWED_HOSTS: list[str] = ["*"]
 
 import os
-BACKEND_API_BASE_URL = os.environ.get("BACKEND_API_BASE_URL", "http://localhost:8000")
+BACKEND_API_BASE_URL: str = os.environ.get("BACKEND_API_BASE_URL", "http://localhost:8000")
 
-SESSION_JWT_KEY = "access_token"
-SESSION_USER_KEY = "user"
+SESSION_JWT_KEY: str = "access_token"
+SESSION_USER_KEY: str = "user"
 
-INSTALLED_APPS = [
+INSTALLED_APPS: list[str] = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     "web",
 ]
 
-MIDDLEWARE = [
+MIDDLEWARE: list[str] = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -47,9 +47,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "frontend.urls"
+ROOT_URLCONF: str = "frontend.urls"
 
-TEMPLATES = [
+TEMPLATES: list[dict[str, str | list[Path] | bool | dict[str, list[str]]]] = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [BASE_DIR / "templates"],
@@ -65,40 +65,40 @@ TEMPLATES = [
     }
 ]
 
-WSGI_APPLICATION = "frontend.wsgi.application"
-ASGI_APPLICATION = "frontend.asgi.application"
+WSGI_APPLICATION: str = "frontend.wsgi.application"
+ASGI_APPLICATION: str = "frontend.asgi.application"
 
-DATABASES = {
+DATABASES: dict[str, dict[str, str | Path]] = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
-AUTH_PASSWORD_VALIDATORS = [
+AUTH_PASSWORD_VALIDATORS: list[dict[str, str]] = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-LANGUAGE_CODE = "en"
+LANGUAGE_CODE: str = "en"
 
-LANGUAGES = [
+LANGUAGES: list[tuple[str, str]] = [
     ("en", "English"),
     ("cs", "Čeština"),
 ]
 
-LOCALE_PATHS = [BASE_DIR / "locale"]
+LOCALE_PATHS: list[Path] = [BASE_DIR / "locale"]
 
-TIME_ZONE = "UTC"
-USE_I18N = True
-USE_L10N = True
-USE_TZ = True
+TIME_ZONE: str = "UTC"
+USE_I18N: bool = True
+USE_L10N: bool = True
+USE_TZ: bool = True
 
-STATIC_URL = "static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_URL: str = "static/"
+STATICFILES_DIRS: list[Path] = [BASE_DIR / "static"]
 
-SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY: bool = True
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD: str = "django.db.models.BigAutoField"

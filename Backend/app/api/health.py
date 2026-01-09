@@ -16,5 +16,5 @@ async def health() -> dict[str, str]:
     Returns:
         dict[str, str]: {"status": "ok"|"fail"}
     """
-    ok = await ping_db()
+    ok: bool = await ping_db()
     return {"status": "ok" if ok else "fail"}

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Mapping, Optional
 from uuid import UUID
 
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection, AsyncIOMotorCursor, \
+    AsyncIOMotorCommandCursor
+from pymongo.results import UpdateResult
 
 from app.domain.models import Project
 
@@ -17,13 +19,13 @@ class ProjectRepository:
         db: Motor database handle.
     """
 
-    def __init__(self, db: AsyncIOMotorDatabase):
+    def __init__(self, db: AsyncIOMotorDatabase[Any]):
         """Initialize the repository.
 
         Args:
             db: Motor database handle.
         """
-        self._col = db["projects"]
+        self._col: AsyncIOMotorCollection[Mapping[str, Any]] = db["projects"]
 
     async def ensure_indexes(self) -> None:
         """Create MongoDB indexes required by the application.
@@ -58,7 +60,7 @@ class ProjectRepository:
         Returns:
             Project | None: Loaded project or None if not found.
         """
-        doc = await self._col.find_one({"id": str(project_id)})
+        doc: Mapping[str, Any] | None = await self._col.find_one({"id": str(project_id)})
         return Project.model_validate(doc) if doc else None
 
     async def list_by_customer(self, customer_id: UUID) -> list[Project]:
@@ -70,8 +72,8 @@ class ProjectRepository:
         Returns:
             list[Project]: Projects sorted by created_at DESC.
         """
-        cursor = self._col.find({"customer_id": str(customer_id)}).sort("created_at", -1)
-        docs = await cursor.to_list(length=200)
+        cursor: AsyncIOMotorCursor[Mapping[str, Any]]= self._col.find({"customer_id": str(customer_id)}).sort("created_at", -1)
+        docs: list[Mapping[str, Any]] = await cursor.to_list(length=200)
         return [Project.model_validate(d) for d in docs]
 
     async def assign_translator(self, project_id: UUID, translator_id: UUID, state: str) -> None:
@@ -105,11 +107,11 @@ class ProjectRepository:
         Returns:
             list[Project]: Projects sorted by created_at DESC.
         """
-        query: dict[str, str] = {"translator_id": str(translator_id)}
+        query: dict[str, Any] = {"translator_id": str(translator_id)}
         if not include_closed:
             query["state"] = {"$ne": "CLOSED"}
-        cursor = self._col.find(query).sort("created_at", -1)
-        docs = await cursor.to_list(length=200)
+        cursor: AsyncIOMotorCursor[Mapping[str, Any]] = self._col.find(query).sort("created_at", -1)
+        docs: list[Mapping[str, Any]] = await cursor.to_list(length=200)
         return [Project.model_validate(d) for d in docs]
 
     async def count_active_by_translator_ids(self, translator_ids: list[UUID]) -> dict[str, int]:
@@ -124,13 +126,18 @@ class ProjectRepository:
         if not translator_ids:
             return {}
 
-        ids = [str(t) for t in translator_ids]
-        pipeline = [
-            {"$match": {"translator_id": {"$in": ids}, "state": {"$ne": "CLOSED"}}},
+        ids: list[str] = [str(t) for t in translator_ids]
+        pipeline: list[Mapping[str, Any]] = [
+            {
+                "$match": {
+                    "translator_id": {"$in": ids},
+                    "state": {"$ne": "CLOSED"},
+                }
+            },
             {"$group": {"_id": "$translator_id", "count": {"$sum": 1}}},
         ]
-        cursor = self._col.aggregate(pipeline)
-        docs = await cursor.to_list(length=len(ids))
+        cursor: AsyncIOMotorCommandCursor[Mapping[str, Any]] = self._col.aggregate(pipeline)
+        docs: list[Mapping[str, Any]] = await cursor.to_list(length=len(ids))
 
         counts: dict[str, int] = {str(t): 0 for t in translator_ids}
         for d in docs:
@@ -148,7 +155,7 @@ class ProjectRepository:
         Returns:
             bool: True if the project was updated, False otherwise.
         """
-        res = await self._col.update_one(
+        res: UpdateResult = await self._col.update_one(
             {"id": str(project_id), "translator_id": str(translator_id)},
             {"$set": {"translated_file_id": translated_file_id, "state": "COMPLETED"}},
         )
@@ -173,7 +180,7 @@ class ProjectRepository:
         Returns:
             bool: True if updated, False otherwise.
         """
-        res = await self._col.update_one(
+        res: UpdateResult = await self._col.update_one(
             {"id": str(project_id), "customer_id": str(customer_id), "state": expected_state},
             {"$set": {"state": new_state}},
         )
@@ -200,7 +207,7 @@ class ProjectRepository:
         Returns:
             bool: True if updated, False otherwise.
         """
-        res = await self._col.update_one(
+        res: UpdateResult = await self._col.update_one(
             {"id": str(project_id), "customer_id": str(customer_id), "state": expected_state},
             {"$set": {"state": new_state, "feedback_id": str(feedback_id)}},
         )

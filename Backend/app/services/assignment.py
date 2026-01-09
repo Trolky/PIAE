@@ -30,8 +30,8 @@ class ProjectAssignmentService:
         project_repo: ProjectRepository,
         translator_lang_repo: TranslatorLanguageRepository,
     ):
-        self._project_repo = project_repo
-        self._translator_lang_repo = translator_lang_repo
+        self._project_repo: ProjectRepository = project_repo
+        self._translator_lang_repo: TranslatorLanguageRepository = translator_lang_repo
 
     async def find_best_translator_id(self, language_code: str) -> Optional[UUID]:
         """Find the best translator for a language.
@@ -43,12 +43,12 @@ class ProjectAssignmentService:
             UUID | None: Chosen translator id, or None if none is available.
         """
 
-        translator_ids_raw = await self._translator_lang_repo.list_translator_ids_for_language(language_code)
+        translator_ids_raw: list[str] = await self._translator_lang_repo.list_translator_ids_for_language(language_code)
         if not translator_ids_raw:
             return None
 
-        translator_ids = [UUID(x) for x in translator_ids_raw]
-        counts = await self._project_repo.count_active_by_translator_ids(translator_ids)
+        translator_ids: list[UUID] = [UUID(x) for x in translator_ids_raw]
+        counts: dict[str, int] = await self._project_repo.count_active_by_translator_ids(translator_ids)
 
         best: Optional[UUID] = None
         best_count: Optional[int] = None
@@ -71,7 +71,7 @@ class ProjectAssignmentService:
             UUID | None: Assigned translator id, or None if the project was closed.
         """
 
-        translator_id = await self.find_best_translator_id(language_code)
+        translator_id: UUID | None = await self.find_best_translator_id(language_code)
         if translator_id is None:
             await self._project_repo.close_project(project_id)
             logger.info(

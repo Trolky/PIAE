@@ -38,11 +38,10 @@ class User(BaseModel):
 
     password_hash: str = Field(min_length=1, description="Hash hesla.")
 
-    # OTP (TOTP) druhá metoda přihlášení
     otp_enabled: bool = False
     otp_secret: Optional[str] = Field(
         default=None,
-        description="Base32 secret pro TOTP (uložený per-user).",
+        description="Base32 secret pro TOTP.",
     )
 
 
@@ -94,12 +93,10 @@ class Project(BaseModel):
     translator_id: Optional[UUID] = None
     language_code: str = Field(min_length=2, max_length=2, description="ISO 639-1")
 
-    # GridFS ObjectId jako string
     original_file_id: str
     translated_file_id: Optional[str] = None
 
     state: ProjectState = ProjectState.CREATED
     created_at: datetime = Field(default_factory=utc_now)
 
-    # reference na Feedback kolekci
     feedback_id: Optional[UUID] = None

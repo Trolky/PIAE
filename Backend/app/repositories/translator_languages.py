@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from typing import Any, Mapping
+
+from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection, AsyncIOMotorCursor
 
 from app.domain.models import TranslatorLanguage
 
@@ -18,13 +20,13 @@ class TranslatorLanguageRepository:
         db: Motor database handle.
     """
 
-    def __init__(self, db: AsyncIOMotorDatabase):
+    def __init__(self, db: AsyncIOMotorDatabase[Any]):
         """Initialize the repository.
 
         Args:
             db: Motor database handle.
         """
-        self._col = db["translator_languages"]
+        self._col: AsyncIOMotorCollection[Mapping[str, Any]] = db["translator_languages"]
 
     async def ensure_indexes(self) -> None:
         """Create MongoDB indexes required by the application."""
@@ -40,8 +42,8 @@ class TranslatorLanguageRepository:
         Returns:
             list[str]: Translator ids as strings.
         """
-        cursor = self._col.find({"language_code": language_code}, projection={"translator_id": 1})
-        docs = await cursor.to_list(length=10000)
+        cursor: AsyncIOMotorCursor[Mapping[str, Any]] = self._col.find({"language_code": language_code}, projection={"translator_id": 1})
+        docs: list[Mapping[str, Any]] = await cursor.to_list(length=10000)
         return [d["translator_id"] for d in docs]
 
     async def list_languages_for_translator(self, translator_id: str) -> list[str]:
@@ -53,8 +55,8 @@ class TranslatorLanguageRepository:
         Returns:
             list[str]: Language codes.
         """
-        cursor = self._col.find({"translator_id": translator_id}, projection={"language_code": 1})
-        docs = await cursor.to_list(length=10000)
+        cursor: AsyncIOMotorCursor[Mapping[str, Any]] = self._col.find({"translator_id": translator_id}, projection={"language_code": 1})
+        docs: list[Mapping[str, Any]] = await cursor.to_list(length=10000)
         return [d["language_code"] for d in docs]
 
     async def add_language(self, tl: TranslatorLanguage) -> None:

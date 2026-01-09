@@ -5,13 +5,84 @@ import urllib.error
 import urllib.request
 import urllib.parse
 from dataclasses import dataclass
-from typing import Any
+from typing import Generic, Mapping, TypeVar, TypedDict, cast
 
 from django.conf import settings
 
 
+class ErrorDetail(TypedDict, total=False):
+    detail: str
+
+
+class TokenOut(TypedDict, total=False):
+    access_token: str
+    token_type: str
+    user_id: str
+    role: str
+
+
+class TranslatorLanguagesOut(TypedDict, total=False):
+    translator_id: str
+    languages: list[str]
+
+
+class ProjectOut(TypedDict, total=False):
+    id: str
+    customer_id: str
+    translator_id: str
+    language_code: str
+    state: str
+
+
+class ProjectListItemOut(TypedDict, total=False):
+    id: str
+    language_code: str
+    original_file_name: str
+    state: str
+    created_at: str
+    customer_id: str
+    customer_name: str
+    translator_id: str
+    translator_name: str
+
+
+class ProjectDetailOut(TypedDict, total=False):
+    id: str
+    customer_id: str
+    translator_id: str
+    language_code: str
+    original_file_id: str
+    translated_file_id: str
+    state: str
+    created_at: str
+    feedback_id: str
+
+
+class FeedbackOut(TypedDict, total=False):
+    project_id: str
+    text: str
+    created_at: str
+
+
+class AdminFeedbackProjectOut(TypedDict, total=False):
+    id: str
+    language_code: str
+    state: str
+    customer_id: str
+    customer_name: str
+    customer_email: str
+    translator_id: str
+    translator_name: str
+    translator_email: str
+    feedback_text: str
+    created_at: str
+
+
+T = TypeVar("T")
+
+
 @dataclass(frozen=True)
-class BackendResponse:
+class BackendResponse(Generic[T]):
     """Response wrapper returned from the backend client.
 
     Attributes:
@@ -20,27 +91,20 @@ class BackendResponse:
     """
 
     status: int
-    data: dict[str, Any] | None
+    data: T | None
 
 
-def _request_json(*, method: str, path: str, payload: dict[str, Any] | None = None, token: str | None = None) -> BackendResponse:
-    """Send an HTTP request to the FastAPI backend and parse JSON response.
+def _request_json(
+    *,
+    method: str,
+    path: str,
+    payload: Mapping[str, object] | None = None,
+    token: str | None = None,
+) -> BackendResponse[dict[str, object]]:
+    """Send an HTTP request to the FastAPI backend and parse JSON dict response."""
 
-    This client uses only the Python standard library (urllib) to keep the Django
-    frontend lightweight.
-
-    Args:
-        method: HTTP method.
-        path: Backend path (starting with '/').
-        payload: Optional JSON payload.
-        token: Optional JWT access token.
-
-    Returns:
-        BackendResponse: Status code and parsed JSON body.
-    """
-
-    base = settings.BACKEND_API_BASE_URL.rstrip("/")
-    url = f"{base}{path}"
+    base: str = settings.BACKEND_API_BASE_URL.rstrip("/")
+    url: str = f"{base}{path}"
 
     headers: dict[str, str] = {}
     if payload is not None:
@@ -48,29 +112,85 @@ def _request_json(*, method: str, path: str, payload: dict[str, Any] | None = No
     if token:
         headers["Authorization"] = f"Bearer {token}"
 
-    data = json.dumps(payload).encode("utf-8") if payload is not None else None
+    data: bytes | None = json.dumps(payload).encode("utf-8") if payload is not None else None
 
-    req = urllib.request.Request(url=url, data=data, headers=headers, method=method)
+    req: urllib.request.Request = urllib.request.Request(url=url, data=data, headers=headers, method=method)
+
+    def _parse_dict(raw_json: str) -> dict[str, object] | None:
+        if not raw_json:
+            return None
+        parsed = json.loads(raw_json)
+        if parsed is None:
+            return None
+        if not isinstance(parsed, dict):
+            # backend pro některé endpointy vrací list; pro ty používej _request_json_list
+            raise TypeError("Expected JSON object")
+        return cast(dict[str, object], parsed)
 
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
             raw = resp.read().decode("utf-8")
-            parsed = json.loads(raw) if raw else None
-            return BackendResponse(status=resp.status, data=parsed)
+            return BackendResponse(status=resp.status, data=_parse_dict(raw))
     except urllib.error.HTTPError as e:
         raw = e.read().decode("utf-8") if e.fp else ""
         try:
-            parsed = json.loads(raw) if raw else None
+            data_dict = _parse_dict(raw)
         except Exception:
-            parsed = {"detail": raw or "HTTP error"}
-        return BackendResponse(status=e.code, data=parsed)
+            data_dict = {"detail": raw or "HTTP error"}
+        return BackendResponse(status=e.code, data=data_dict)
 
 
-def _post_json(path: str, payload: dict[str, Any]) -> BackendResponse:
+def _request_json_list(
+    *,
+    method: str,
+    path: str,
+    payload: Mapping[str, object] | None = None,
+    token: str | None = None,
+) -> BackendResponse[list[dict[str, object]]]:
+    """Send an HTTP request and parse JSON list response."""
+
+    base: str = settings.BACKEND_API_BASE_URL.rstrip("/")
+    url: str = f"{base}{path}"
+
+    headers: dict[str, str] = {}
+    if payload is not None:
+        headers["Content-Type"] = "application/json"
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    data: bytes | None = json.dumps(payload).encode("utf-8") if payload is not None else None
+
+    req: urllib.request.Request = urllib.request.Request(url=url, data=data, headers=headers, method=method)
+
+    def _parse_list(raw_json: str) -> list[dict[str, object]] | None:
+        if not raw_json:
+            return None
+        parsed = json.loads(raw_json)
+        if parsed is None:
+            return None
+        if not isinstance(parsed, list):
+            raise TypeError("Expected JSON array")
+        # normalize: keep only dict items
+        out: list[dict[str, object]] = []
+        for item in parsed:
+            if isinstance(item, dict):
+                out.append(cast(dict[str, object], item))
+        return out
+
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            raw = resp.read().decode("utf-8")
+            return BackendResponse(status=resp.status, data=_parse_list(raw))
+    except urllib.error.HTTPError as e:
+        # pro list endpointy při chybě často přijde dict s detail; mapujeme to na None a necháme status
+        return BackendResponse(status=e.code, data=None)
+
+
+def _post_json(path: str, payload: Mapping[str, object]) -> BackendResponse[dict[str, object]]:
     return _request_json(method="POST", path=path, payload=payload)
 
 
-def register_user(*, name: str, email_address: str, password: str, role: str) -> BackendResponse:
+def register_user(*, name: str, email_address: str, password: str, role: str) -> BackendResponse[dict[str, object]]:
     """Register a user on the backend.
 
     Args:
@@ -97,43 +217,46 @@ def register_user(*, name: str, email_address: str, password: str, role: str) ->
     )
 
 
-def login(*, username: str, password: str) -> BackendResponse:
+def login(*, username: str, password: str) -> BackendResponse[TokenOut | ErrorDetail]:
     """Log in using username/password and get a JWT token."""
-    return _post_json(
+    resp = _post_json(
         "/auth/login",
         {
             "username": username,
             "password": password,
         },
     )
+    return BackendResponse(status=resp.status, data=cast(TokenOut | ErrorDetail | None, resp.data))
 
 
-def otp_enable(*, token: str) -> BackendResponse:
+def otp_enable(*, token: str) -> BackendResponse[dict[str, object]]:
     """Enable OTP for the current user and return provisioning URI."""
     return _request_json(method="POST", path="/auth/otp/enable", payload={}, token=token)
 
 
-def otp_login(*, username: str, otp: str) -> BackendResponse:
+def otp_login(*, username: str, otp: str) -> BackendResponse[TokenOut | ErrorDetail]:
     """Log in using OTP (TOTP) and get a JWT token."""
-    return _post_json(
+    resp = _post_json(
         "/auth/otp/login",
         {
             "username": username,
             "otp": otp,
         },
     )
+    return BackendResponse(status=resp.status, data=cast(TokenOut | ErrorDetail | None, resp.data))
 
 
-def list_translator_languages(*, translator_id: str, token: str) -> BackendResponse:
+def list_translator_languages(*, translator_id: str, token: str) -> BackendResponse[TranslatorLanguagesOut | ErrorDetail]:
     """List languages configured for a translator."""
-    return _request_json(
+    resp = _request_json(
         method="GET",
         path=f"/users/translators/{translator_id}/languages",
         token=token,
     )
+    return BackendResponse(status=resp.status, data=cast(TranslatorLanguagesOut | ErrorDetail | None, resp.data))
 
 
-def add_translator_language(*, translator_id: str, language_code: str, token: str) -> BackendResponse:
+def add_translator_language(*, translator_id: str, language_code: str, token: str) -> BackendResponse[dict[str, object]]:
     """Add a translator language (idempotent)."""
     return _request_json(
         method="POST",
@@ -143,7 +266,7 @@ def add_translator_language(*, translator_id: str, language_code: str, token: st
     )
 
 
-def delete_translator_language(*, translator_id: str, language_code: str, token: str) -> BackendResponse:
+def delete_translator_language(*, translator_id: str, language_code: str, token: str) -> BackendResponse[dict[str, object]]:
     """Remove a translator language."""
     return _request_json(
         method="DELETE",
@@ -152,12 +275,12 @@ def delete_translator_language(*, translator_id: str, language_code: str, token:
     )
 
 
-def create_project(*, language_code: str, file_name: str, file_bytes: bytes, content_type: str, token: str) -> BackendResponse:
+def create_project(*, language_code: str, file_name: str, file_bytes: bytes, content_type: str, token: str) -> BackendResponse[ProjectOut | ErrorDetail]:
     """Create a new project and upload original file using multipart/form-data."""
-    base = settings.BACKEND_API_BASE_URL.rstrip("/")
-    url = f"{base}/projects"
+    base: str = settings.BACKEND_API_BASE_URL.rstrip("/")
+    url: str = f"{base}/projects"
 
-    boundary = "----PIAEFormBoundary7MA4YWxkTrZu0gW"
+    boundary: str = "----PIAEFormBoundary7MA4YWxkTrZu0gW"
 
     def _part(name: str, value: str) -> bytes:
         return (
@@ -173,7 +296,7 @@ def create_project(*, language_code: str, file_name: str, file_bytes: bytes, con
             f"Content-Type: {ctype}\r\n\r\n"
         ).encode("utf-8") + data + b"\r\n"
 
-    body = b"".join(
+    body: bytes = b"".join(
         [
             _part("language_code", language_code),
             _file_part("original_file", file_name, content_type, file_bytes),
@@ -181,12 +304,12 @@ def create_project(*, language_code: str, file_name: str, file_bytes: bytes, con
         ]
     )
 
-    headers = {
+    headers: dict[str, str] = {
         "Content-Type": f"multipart/form-data; boundary={boundary}",
         "Authorization": f"Bearer {token}",
     }
 
-    req = urllib.request.Request(url=url, data=body, headers=headers, method="POST")
+    req: urllib.request.Request = urllib.request.Request(url=url, data=body, headers=headers, method="POST")
 
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
@@ -202,9 +325,10 @@ def create_project(*, language_code: str, file_name: str, file_bytes: bytes, con
         return BackendResponse(status=e.code, data=parsed)
 
 
-def list_projects(*, token: str) -> BackendResponse:
+def list_projects(*, token: str) -> BackendResponse[list[ProjectListItemOut]]:
     """List projects for the current user."""
-    return _request_json(method="GET", path="/projects", token=token)
+    resp = _request_json_list(method="GET", path="/projects", token=token)
+    return BackendResponse(status=resp.status, data=cast(list[ProjectListItemOut] | None, resp.data))
 
 
 def download_project_original(*, project_id: str, token: str) -> tuple[int, bytes, dict[str, str]]:
@@ -218,10 +342,10 @@ def download_project_original(*, project_id: str, token: str) -> tuple[int, byte
         tuple[int, bytes, dict[str, str]]: (status, file_bytes, response_headers)
     """
 
-    base = settings.BACKEND_API_BASE_URL.rstrip("/")
-    url = f"{base}/projects/{project_id}/original"
+    base: str = settings.BACKEND_API_BASE_URL.rstrip("/")
+    url: str = f"{base}/projects/{project_id}/original"
 
-    req = urllib.request.Request(url=url, method="GET", headers={"Authorization": f"Bearer {token}"})
+    req: urllib.request.Request = urllib.request.Request(url=url, method="GET", headers={"Authorization": f"Bearer {token}"})
 
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
@@ -245,10 +369,10 @@ def download_project_translated(*, project_id: str, token: str) -> tuple[int, by
         tuple[int, bytes, dict[str, str]]: (status, file_bytes, response_headers)
     """
 
-    base = settings.BACKEND_API_BASE_URL.rstrip("/")
-    url = f"{base}/projects/{project_id}/translated"
+    base: str = settings.BACKEND_API_BASE_URL.rstrip("/")
+    url: str = f"{base}/projects/{project_id}/translated"
 
-    req = urllib.request.Request(url=url, method="GET", headers={"Authorization": f"Bearer {token}"})
+    req: urllib.request.Request = urllib.request.Request(url=url, method="GET", headers={"Authorization": f"Bearer {token}"})
 
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
@@ -261,12 +385,12 @@ def download_project_translated(*, project_id: str, token: str) -> tuple[int, by
         return e.code, data, headers
 
 
-def submit_translation(*, project_id: str, file_name: str, file_bytes: bytes, content_type: str, token: str) -> BackendResponse:
+def submit_translation(*, project_id: str, file_name: str, file_bytes: bytes, content_type: str, token: str) -> BackendResponse[dict[str, object]]:
     """Upload translated file using multipart/form-data."""
-    base = settings.BACKEND_API_BASE_URL.rstrip("/")
-    url = f"{base}/projects/{project_id}/translation"
+    base: str = settings.BACKEND_API_BASE_URL.rstrip("/")
+    url: str = f"{base}/projects/{project_id}/translation"
 
-    boundary = "----PIAEFormBoundaryTranslatorUpload"
+    boundary: str = "----PIAEFormBoundaryTranslatorUpload"
 
     def _file_part(name: str, filename: str, ctype: str, data: bytes) -> bytes:
         return (
@@ -275,19 +399,19 @@ def submit_translation(*, project_id: str, file_name: str, file_bytes: bytes, co
             f"Content-Type: {ctype}\r\n\r\n"
         ).encode("utf-8") + data + b"\r\n"
 
-    body = b"".join(
+    body: bytes = b"".join(
         [
             _file_part("translated_file", file_name, content_type, file_bytes),
             f"--{boundary}--\r\n".encode("utf-8"),
         ]
     )
 
-    headers = {
+    headers: dict[str, str] = {
         "Content-Type": f"multipart/form-data; boundary={boundary}",
         "Authorization": f"Bearer {token}",
     }
 
-    req = urllib.request.Request(url=url, data=body, headers=headers, method="POST")
+    req: urllib.request.Request = urllib.request.Request(url=url, data=body, headers=headers, method="POST")
 
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
@@ -303,33 +427,36 @@ def submit_translation(*, project_id: str, file_name: str, file_bytes: bytes, co
         return BackendResponse(status=e.code, data=parsed)
 
 
-def approve_project(*, project_id: str, token: str, text: str = "") -> BackendResponse:
+def approve_project(*, project_id: str, token: str, text: str = "") -> BackendResponse[dict[str, object]]:
     """Approve a completed project and optionally send feedback."""
     return _request_json(method="POST", path=f"/projects/{project_id}/approve", payload={"text": text}, token=token)
 
 
-def reject_project(*, project_id: str, text: str, token: str) -> BackendResponse:
+def reject_project(*, project_id: str, text: str, token: str) -> BackendResponse[dict[str, object]]:
     """Reject a completed project and send feedback."""
     return _request_json(method="POST", path=f"/projects/{project_id}/reject", payload={"text": text}, token=token)
 
 
-def get_feedback_by_project(*, project_id: str, token: str) -> BackendResponse:
+def get_feedback_by_project(*, project_id: str, token: str) -> BackendResponse[FeedbackOut | ErrorDetail]:
     """Get feedback for a project."""
-    return _request_json(method="GET", path=f"/feedback/projects/{project_id}", token=token)
+    resp = _request_json(method="GET", path=f"/feedback/projects/{project_id}", token=token)
+    return BackendResponse(status=resp.status, data=cast(FeedbackOut | ErrorDetail | None, resp.data))
 
 
-def get_project(*, project_id: str, token: str) -> BackendResponse:
+def get_project(*, project_id: str, token: str) -> BackendResponse[ProjectDetailOut | ErrorDetail]:
     """Get detailed information about a project."""
-    return _request_json(method="GET", path=f"/projects/{project_id}", token=token)
+    resp = _request_json(method="GET", path=f"/projects/{project_id}", token=token)
+    return BackendResponse(status=resp.status, data=cast(ProjectDetailOut | ErrorDetail | None, resp.data))
 
 
-def admin_list_feedback_projects(*, token: str, state: str | None = None) -> BackendResponse:
+def admin_list_feedback_projects(*, token: str, state: str | None = None) -> BackendResponse[list[AdminFeedbackProjectOut]]:
     """List all projects with feedback (admin view)."""
-    q = f"?state={state}" if state else ""
-    return _request_json(method="GET", path=f"/projects/admin/feedback{q}", token=token)
+    q: str = f"?state={state}" if state else ""
+    resp = _request_json_list(method="GET", path=f"/projects/admin/feedback{q}", token=token)
+    return BackendResponse(status=resp.status, data=cast(list[AdminFeedbackProjectOut] | None, resp.data))
 
 
-def admin_send_project_message(*, project_id: str, token: str, to: str, subject: str, text: str) -> BackendResponse:
+def admin_send_project_message(*, project_id: str, token: str, to: str, subject: str, text: str) -> BackendResponse[dict[str, object]]:
     """Send a message regarding a project (admin action)."""
     return _request_json(
         method="POST",
@@ -339,6 +466,6 @@ def admin_send_project_message(*, project_id: str, token: str, to: str, subject:
     )
 
 
-def admin_close_project(*, project_id: str, token: str) -> BackendResponse:
+def admin_close_project(*, project_id: str, token: str) -> BackendResponse[dict[str, object]]:
     """Close a project (admin action)."""
     return _request_json(method="POST", path=f"/projects/admin/projects/{project_id}/close", token=token)

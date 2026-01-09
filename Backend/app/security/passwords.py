@@ -24,7 +24,7 @@ def _normalize_password(password: str) -> str:
         str: Normalized password (either original or SHA-256 hex).
     """
 
-    raw = password.encode("utf-8")
+    raw: bytes = password.encode("utf-8")
     if len(raw) <= 1024:
         return password
     return hashlib.sha256(raw).hexdigest()
@@ -40,7 +40,7 @@ def hash_password(password: str) -> str:
         str: Argon2 hash string.
     """
 
-    return _pwd.hash(_normalize_password(password))
+    return str(_pwd.hash(_normalize_password(password)))
 
 
 def verify_password(password: str, password_hash: str) -> bool:

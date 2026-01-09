@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
@@ -14,12 +16,12 @@ class LoginForm(forms.Form):
         otp: One-time code (required for OTP login).
     """
 
-    METHOD_CHOICES = (
+    METHOD_CHOICES: tuple[tuple[str, str | object], tuple[str, str | object]] = (
         ("password", _("Password")),
         ("otp", _("One-time code (OTP)")),
     )
 
-    method = forms.ChoiceField(
+    method: forms.ChoiceField = forms.ChoiceField(
         label=_("Login method"),
         choices=METHOD_CHOICES,
         initial="password",
@@ -28,21 +30,21 @@ class LoginForm(forms.Form):
         help_text=_("OTP requires prior activation after password login."),
     )
 
-    username = forms.CharField(
+    username: forms.CharField = forms.CharField(
         label=_("Username"),
         min_length=1,
         help_text=_("Alphanumeric username"),
         widget=forms.TextInput(attrs={"class": "field__input", "autocomplete": "username"}),
     )
 
-    password = forms.CharField(
+    password: forms.CharField = forms.CharField(
         label=_("Password"),
         widget=forms.PasswordInput(attrs={"class": "field__input", "autocomplete": "current-password"}),
         min_length=1,
         required=False,
     )
 
-    otp = forms.CharField(
+    otp: forms.CharField = forms.CharField(
         label=_("One-time code"),
         min_length=4,
         max_length=12,
@@ -50,9 +52,9 @@ class LoginForm(forms.Form):
         widget=forms.TextInput(attrs={"class": "field__input", "autocomplete": "one-time-code"}),
     )
 
-    def clean(self):
-        cleaned = super().clean()
-        method = cleaned.get("method")
+    def clean(self) -> dict[str, Any] | None:
+        cleaned = super().clean() or dict()
+        method: str | None = cleaned.get("method")
         if method == "otp":
             if not (cleaned.get("otp") or "").strip():
                 self.add_error("otp", _("OTP code is required."))
@@ -73,16 +75,16 @@ class RegisterForm(forms.Form):
         password_confirm: Password confirmation.
     """
 
-    name = forms.CharField(
+    name: forms.CharField = forms.CharField(
         label=_("Username"),
         min_length=1,
         widget=forms.TextInput(attrs={"class": "field__input", "autocomplete": "username"}),
     )
-    email_address = forms.EmailField(
+    email_address: forms.EmailField = forms.EmailField(
         label=_("Email"),
         widget=forms.EmailInput(attrs={"class": "field__input", "autocomplete": "email"}),
     )
-    role = forms.ChoiceField(
+    role: forms.ChoiceField = forms.ChoiceField(
         label=_("Role"),
         choices=(
             ("CUSTOMER", _("Customer")),
@@ -91,34 +93,34 @@ class RegisterForm(forms.Form):
         widget=forms.Select(attrs={"class": "field__input"}),
     )
 
-    password = forms.CharField(
+    password: forms.CharField = forms.CharField(
         label=_("Password"),
         widget=forms.PasswordInput(attrs={"class": "field__input", "autocomplete": "new-password"}),
         min_length=8,
         help_text=_("Minimum 8 characters and at least one of them must be a number."),
     )
-    password_confirm = forms.CharField(
+    password_confirm: forms.CharField = forms.CharField(
         label=_("Confirm password"),
         widget=forms.PasswordInput(attrs={"class": "field__input", "autocomplete": "new-password"}),
         min_length=8,
     )
 
     def clean_name(self) -> str:
-        name = self.cleaned_data["name"]
+        name: str = self.cleaned_data["name"]
         if not name.isalnum():
             raise forms.ValidationError(_("Username must be alphanumeric."))
         return name
 
     def clean_password(self) -> str:
-        pwd = self.cleaned_data["password"]
+        pwd: str = self.cleaned_data["password"]
         if not any(c.isalpha() for c in pwd) or not any(c.isdigit() for c in pwd):
             raise forms.ValidationError(_("Password must contain at least one letter and one number."))
-        return pwd
+        return str(pwd)
 
-    def clean(self):
-        cleaned = super().clean()
-        pwd = cleaned.get("password")
-        pwd2 = cleaned.get("password_confirm")
+    def clean(self) -> dict[str, Any] | None:
+        cleaned = super().clean() or dict()
+        pwd: str | None = cleaned.get("password")
+        pwd2: str | None = cleaned.get("password_confirm")
         if pwd and pwd2 and pwd != pwd2:
             self.add_error("password_confirm", _("Passwords do not match."))
         return cleaned

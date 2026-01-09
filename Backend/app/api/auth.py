@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import hmac
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.api.deps import CurrentUser, Db
@@ -16,7 +15,7 @@ from app.security.passwords import verify_password, hash_password, needs_rehash
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router: APIRouter = APIRouter(prefix="/auth", tags=["auth"])
 
 
 class LoginIn(BaseModel):
@@ -24,11 +23,11 @@ class LoginIn(BaseModel):
 
     Attributes:
         username: Alphanumeric username.
-        password: Plaintext password (preferred).
+        password: Plaintext password.
     """
 
     username: str = Field(min_length=1, pattern=r"^[A-Za-z0-9]+$")
-    password: str | None = Field(default=None, min_length=1, description="Plaintext password")
+    password: str = Field(default="", min_length=1, description="Plaintext password")
 
 
 class OtpProvisionOut(BaseModel):
@@ -54,7 +53,7 @@ class TokenOut(BaseModel):
 
 
 @router.post("/login", response_model=TokenOut)
-async def login(payload: LoginIn, db=Db) -> TokenOut:
+async def login(payload: LoginIn, db: Db) -> TokenOut:
     """Authenticate a user and return a JWT access token.
 
     Args:
@@ -68,31 +67,28 @@ async def login(payload: LoginIn, db=Db) -> TokenOut:
         HTTPException: If credentials are invalid or payload is incomplete.
     """
 
-    repo = UserRepository(db)
+    repo: UserRepository = UserRepository(db)
     user = await repo.get_by_name(payload.username)
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    if payload.password is not None:
-        if not verify_password(payload.password, user.password_hash):
-            raise HTTPException(status_code=401, detail="Invalid credentials")
-        if needs_rehash(user.password_hash):
-            try:
-                await repo.update_password_hash(user_id=user.id, password_hash=hash_password(payload.password))
-            except Exception:
-                pass
-    else:
-        if not hmac.compare_digest(user.password_hash, payload.password_hash):
-            raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not verify_password(payload.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    token = create_access_token(user_id=user.id, role=user.role)
+    if needs_rehash(user.password_hash):
+        try:
+            await repo.update_password_hash(user_id=user.id, password_hash=hash_password(payload.password))
+        except Exception:
+            pass
+
+    token: str = create_access_token(user_id=user.id, role=user.role)
     logger.info("User logged in", extra={"user_id": str(user.id), "role": user.role.value})
 
     return TokenOut(access_token=token, user_id=user.id, role=user.role.value)
 
 
 @router.post("/otp/enable", response_model=OtpProvisionOut)
-async def otp_enable(db=Db, current_user: User = CurrentUser) -> OtpProvisionOut:
+async def otp_enable(db: Db, current_user: CurrentUser) -> OtpProvisionOut:
     """Enable OTP (TOTP) for the currently authenticated user.
 
     This endpoint requires a valid JWT (password login first). It stores a new
@@ -106,18 +102,18 @@ async def otp_enable(db=Db, current_user: User = CurrentUser) -> OtpProvisionOut
         OtpProvisionOut: Provisioning URI.
     """
 
-    repo = UserRepository(db)
+    repo: UserRepository = UserRepository(db)
 
-    secret = generate_secret()
+    secret: str = generate_secret()
     await repo.enable_otp(user_id=current_user.id, otp_secret=secret)
 
-    uri = provisioning_uri_from_secret(secret=secret, username=current_user.name)
+    uri: str = provisioning_uri_from_secret(secret=secret, username=current_user.name)
     logger.info("OTP enabled", extra={"user_id": str(current_user.id)})
     return OtpProvisionOut(otpauth_uri=uri)
 
 
 @router.post("/otp/login", response_model=TokenOut)
-async def otp_login(payload: OtpLoginIn, db=Db) -> TokenOut:
+async def otp_login(payload: OtpLoginIn, db: Db) -> TokenOut:
     """Authenticate using OTP (TOTP) and return a JWT token.
 
     Args:
@@ -131,8 +127,8 @@ async def otp_login(payload: OtpLoginIn, db=Db) -> TokenOut:
         HTTPException: If credentials are invalid.
     """
 
-    repo = UserRepository(db)
-    user = await repo.get_by_name(payload.username)
+    repo: UserRepository = UserRepository(db)
+    user: User | None = await repo.get_by_name(payload.username)
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 

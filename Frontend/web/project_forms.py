@@ -14,19 +14,19 @@ class ProjectCreateForm(forms.Form):
         original_file: Original source file (English).
     """
 
-    language_code = forms.ChoiceField(
+    language_code: forms.ChoiceField = forms.ChoiceField(
         label=_("Target language"),
         choices=COMMON_TARGET_LANGUAGES,
         widget=forms.Select(attrs={"class": "field__input"}),
     )
 
-    original_file = forms.FileField(label=_("Source file (English)"))
+    original_file: forms.FileField = forms.FileField(label=_("Source file (English)"))
 
     def clean_language_code(self) -> str:
         return (self.cleaned_data["language_code"] or "").strip().lower()
 
-    def clean_original_file(self):
-        f = self.cleaned_data["original_file"]
+    def clean_original_file(self) -> forms.Field:
+        f: forms.Field = self.cleaned_data["original_file"]
         if f is None:
             raise forms.ValidationError(_("File is required"))
         return f

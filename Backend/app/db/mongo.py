@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
@@ -10,11 +10,11 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-_client: Optional[AsyncIOMotorClient] = None
-_db: Optional[AsyncIOMotorDatabase] = None
+_client: Optional[AsyncIOMotorClient[Any]] = None
+_db: Optional[AsyncIOMotorDatabase[Any]] = None
 
 
-def get_client() -> AsyncIOMotorClient:
+def get_client() -> AsyncIOMotorClient[Any]:
     """Return a singleton MongoDB client.
 
     Returns:
@@ -27,7 +27,7 @@ def get_client() -> AsyncIOMotorClient:
     return _client
 
 
-def get_db() -> AsyncIOMotorDatabase:
+def get_db() -> AsyncIOMotorDatabase[Any]:
     """Return a singleton database handle.
 
     Returns:
@@ -48,8 +48,8 @@ async def ping_db() -> bool:
     Raises:
         Any: Propagates underlying Motor errors to fail application startup.
     """
-    db = get_db()
-    res = await db.command("ping")
-    ok = bool(res.get("ok"))
+    db: AsyncIOMotorDatabase[Any] = get_db()
+    res: dict[str, Any] = await db.command("ping")
+    ok: bool = bool(res.get("ok"))
     logger.info("MongoDB ping", extra={"ok": ok, "db": settings.mongodb_db})
     return ok

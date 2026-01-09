@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from argparse import ArgumentParser
+from typing import Any
+
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
@@ -13,13 +16,13 @@ class Command(BaseCommand):
 
     help = "Run migrations and start development server (useful for Docker)."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
         """Add command arguments."""
         parser.add_argument("addrport", nargs="?", default="0.0.0.0:8000")
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         """Command entry point."""
-        addrport = options["addrport"]
+        addrport: str = str(options.get("addrport", "0.0.0.0:8000"))
         self.stdout.write(self.style.NOTICE("Applying migrations..."))
         call_command("migrate", interactive=False)
         self.stdout.write(self.style.SUCCESS("Migrations applied."))

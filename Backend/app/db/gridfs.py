@@ -4,7 +4,7 @@ import logging
 from typing import Any, Optional, Tuple
 
 from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorGridFSBucket
+from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorGridFSBucket, AsyncIOMotorGridOut
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class GridFsService:
         bucket_name: GridFS bucket name (default: "files").
     """
 
-    def __init__(self, db: AsyncIOMotorDatabase, *, bucket_name: str = "files") -> None:
+    def __init__(self, db: AsyncIOMotorDatabase[Any], *, bucket_name: str = "files") -> None:
         """Initialize the GridFS wrapper."""
         self._bucket: AsyncIOMotorGridFSBucket = AsyncIOMotorGridFSBucket(db, bucket_name=bucket_name)
 
@@ -38,7 +38,7 @@ class GridFsService:
         Returns:
             ObjectId: GridFS file id.
         """
-        file_id = await self._bucket.upload_from_stream(filename, data, metadata=metadata or {})
+        file_id: ObjectId = await self._bucket.upload_from_stream(filename, data, metadata=metadata or {})
         logger.info("GridFS upload", extra={"file_id": str(file_id), "stored_filename": filename})
         return file_id
 
@@ -51,10 +51,16 @@ class GridFsService:
         Returns:
             tuple[bytes, dict[str, Any]]: (content, info) where info contains filename/length/metadata.
         """
-        stream = await self._bucket.open_download_stream(file_id)
-        assert stream is not None
-        raw = await stream.read()
-        content = bytes(raw)
+        stream: AsyncIOMotorGridOut = await self._bucket.open_download_stream(file_id)
+
+        chunks: list[bytes] = []
+        while True:
+            chunk: bytes = await stream.readchunk()
+            if not chunk:
+                break
+            chunks.append(bytes(chunk))
+
+        content: bytes  = b"".join(chunks)
         info: dict[str, Any] = {
             "filename": getattr(stream, "filename", None),
             "length": getattr(stream, "length", None),

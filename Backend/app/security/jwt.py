@@ -20,8 +20,8 @@ def create_access_token(*, user_id: UUID, role: UserRole) -> str:
     Returns:
         str: Encoded JWT.
     """
-    now = datetime.now(timezone.utc)
-    exp = now + timedelta(minutes=settings.jwt_access_token_exp_minutes)
+    now: datetime = datetime.now(timezone.utc)
+    exp: datetime = now + timedelta(minutes=settings.jwt_access_token_exp_minutes)
 
     payload: dict[str, Any] = {
         "sub": str(user_id),

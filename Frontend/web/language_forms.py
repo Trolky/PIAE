@@ -3,8 +3,7 @@ from __future__ import annotations
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-COMMON_TARGET_LANGUAGES: list[tuple[str, str]] = [
-    # Common target languages for translator settings and project creation.
+COMMON_TARGET_LANGUAGES: list[tuple[str, str | object]] = [
     ("cs", _("Czech (cs)")),
     ("sk", _("Slovak (sk)")),
     ("de", _("German (de)")),
@@ -21,7 +20,7 @@ COMMON_TARGET_LANGUAGES: list[tuple[str, str]] = [
 class LanguageAddForm(forms.Form):
     """Form for adding a translator language from a predefined set."""
 
-    language_code = forms.ChoiceField(
+    language_code: forms.ChoiceField = forms.ChoiceField(
         label=_("Translate to"),
         choices=COMMON_TARGET_LANGUAGES,
         widget=forms.Select(attrs={"class": "field__input"}),
@@ -34,10 +33,10 @@ class LanguageAddForm(forms.Form):
 class LanguageRemoveForm(forms.Form):
     """Form for removing a translator language (hidden input)."""
 
-    language_code = forms.CharField(min_length=2, max_length=2, widget=forms.HiddenInput())
+    language_code: forms.CharField = forms.CharField(min_length=2, max_length=2, widget=forms.HiddenInput())
 
     def clean_language_code(self) -> str:
-        code = (self.cleaned_data["language_code"] or "").strip().lower()
+        code: str = (self.cleaned_data["language_code"] or "").strip().lower()
         if len(code) != 2 or not code.isalpha():
             raise forms.ValidationError(_("Invalid language code"))
         return code

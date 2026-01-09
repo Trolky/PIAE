@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional, Mapping
 from uuid import UUID
 
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection, AsyncIOMotorCursor
 
 from app.domain.enums import UserRole
 from app.domain.models import User
@@ -19,13 +19,13 @@ class UserRepository:
         db: Motor database handle.
     """
 
-    def __init__(self, db: AsyncIOMotorDatabase):
+    def __init__(self, db: AsyncIOMotorDatabase[Any]):
         """Initialize the repository.
 
         Args:
             db: Motor database handle.
         """
-        self._col = db["users"]
+        self._col: AsyncIOMotorCollection[Mapping[str, Any]] = db["users"]
 
     async def ensure_indexes(self) -> None:
         """Create MongoDB indexes required by the application.
@@ -46,7 +46,7 @@ class UserRepository:
         Returns:
             User | None: Loaded user or None if not found.
         """
-        doc = await self._col.find_one({"id": str(user_id)})
+        doc: Mapping[str, Any] | None = await self._col.find_one({"id": str(user_id)})
         return User.model_validate(doc) if doc else None
 
     async def get_by_email(self, email_address: str) -> Optional[User]:
@@ -58,7 +58,7 @@ class UserRepository:
         Returns:
             User | None: Loaded user or None if not found.
         """
-        doc = await self._col.find_one({"email_address": email_address})
+        doc: Mapping[str, Any] | None = await self._col.find_one({"email_address": email_address})
         return User.model_validate(doc) if doc else None
 
     async def get_by_name(self, name: str) -> Optional[User]:
@@ -70,7 +70,7 @@ class UserRepository:
         Returns:
             User | None: Loaded user or None if not found.
         """
-        doc = await self._col.find_one({"name": name})
+        doc: Mapping[str, Any] | None = await self._col.find_one({"name": name})
         return User.model_validate(doc) if doc else None
 
     async def create(self, user: User) -> User:
@@ -99,9 +99,9 @@ class UserRepository:
         """
         if not user_ids:
             return []
-        ids = [str(x) for x in user_ids]
-        cursor = self._col.find({"id": {"$in": ids}})
-        docs = await cursor.to_list(length=len(ids))
+        ids: list[str] = [str(x) for x in user_ids]
+        cursor: AsyncIOMotorCursor[Mapping[str, Any]] = self._col.find({"id": {"$in": ids}})
+        docs: list[Mapping[str, Any]] = await cursor.to_list(length=len(ids))
         return [User.model_validate(d) for d in docs]
 
     async def map_ids_to_names(self, user_ids: list[UUID]) -> dict[str, str]:
@@ -113,7 +113,7 @@ class UserRepository:
         Returns:
             dict[str, str]: Mapping {user_id: username}.
         """
-        users = await self.list_by_ids(user_ids)
+        users: list[User] = await self.list_by_ids(user_ids)
         return {str(u.id): u.name for u in users}
 
     async def list_translators_for_language(self, language_code: str) -> list[User]:
@@ -125,8 +125,8 @@ class UserRepository:
         Returns:
             list[User]: Translator users.
         """
-        cursor = self._col.find({"role": UserRole.TRANSLATOR.value})
-        docs = await cursor.to_list(length=1000)
+        cursor: AsyncIOMotorCursor[Mapping[str, Any]] = self._col.find({"role": UserRole.TRANSLATOR.value})
+        docs: list[Mapping[str, Any]] = await cursor.to_list(length=1000)
         return [User.model_validate(d) for d in docs]
 
     async def enable_otp(self, *, user_id: UUID, otp_secret: str) -> None:

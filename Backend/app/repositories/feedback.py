@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional, Mapping
 from uuid import UUID
 
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
 
 from app.domain.models import Feedback
 
@@ -20,13 +20,13 @@ class FeedbackRepository:
         db: Motor database handle.
     """
 
-    def __init__(self, db: AsyncIOMotorDatabase):
+    def __init__(self, db: AsyncIOMotorDatabase[Any]):
         """Initialize the repository.
 
         Args:
             db: Motor database handle.
         """
-        self._col = db["feedbacks"]
+        self._col: AsyncIOMotorCollection[Mapping[str, Any]] = db["feedbacks"]
 
     async def ensure_indexes(self) -> None:
         """Create MongoDB indexes required by the application.
@@ -47,7 +47,7 @@ class FeedbackRepository:
         Returns:
             Feedback | None: Feedback if present.
         """
-        doc = await self._col.find_one({"project_id": str(project_id)})
+        doc: Mapping[str, Any] | None = await self._col.find_one({"project_id": str(project_id)})
         return Feedback.model_validate(doc) if doc else None
 
     async def upsert_for_project(self, feedback: Feedback) -> Feedback:
@@ -65,7 +65,7 @@ class FeedbackRepository:
 
         await self.ensure_indexes()
 
-        existing = await self.get_by_project_id(feedback.project_id)
+        existing: Feedback | None = await self.get_by_project_id(feedback.project_id)
         if existing is not None:
             feedback = feedback.model_copy(update={"id": existing.id})
 
