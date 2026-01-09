@@ -123,7 +123,6 @@ def _request_json(
         if parsed is None:
             return None
         if not isinstance(parsed, dict):
-            # backend pro některé endpointy vrací list; pro ty používej _request_json_list
             raise TypeError("Expected JSON object")
         return cast(dict[str, object], parsed)
 
@@ -170,7 +169,7 @@ def _request_json_list(
             return None
         if not isinstance(parsed, list):
             raise TypeError("Expected JSON array")
-        # normalize: keep only dict items
+
         out: list[dict[str, object]] = []
         for item in parsed:
             if isinstance(item, dict):
@@ -182,7 +181,6 @@ def _request_json_list(
             raw = resp.read().decode("utf-8")
             return BackendResponse(status=resp.status, data=_parse_list(raw))
     except urllib.error.HTTPError as e:
-        # pro list endpointy při chybě často přijde dict s detail; mapujeme to na None a necháme status
         return BackendResponse(status=e.code, data=None)
 
 

@@ -556,7 +556,6 @@ async def admin_list_projects_with_feedback(
     for p in projects:
         fb_text: str | None = None
 
-        # prefer explicit feedback_id reference if present; otherwise fallback to lookup by project_id
         if p.feedback_id is not None:
             fb: Feedback | None = await fb_repo.get_by_project_id(p.id)
             fb_text = fb.text if fb else None

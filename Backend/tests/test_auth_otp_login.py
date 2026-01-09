@@ -6,7 +6,18 @@ from fastapi.testclient import TestClient
 from app.main import app
 
 
-def test_otp_login_happy_path(monkeypatch):
+def test_otp_login_happy_path(monkeypatch) -> None:
+    """OTP login should succeed for a user with OTP enabled and a valid code.
+
+    Scenario:
+        - User exists, has otp_enabled=True and otp_secret.
+        - Client sends a valid current TOTP code.
+
+    Expected behavior:
+        - Endpoint returns 200.
+        - Response contains an access_token and correct role.
+    """
+
     class _Role:
         value = "CUSTOMER"
 
@@ -36,7 +47,16 @@ def test_otp_login_happy_path(monkeypatch):
     assert data["role"] == "CUSTOMER"
 
 
-def test_otp_login_requires_enabled(monkeypatch):
+def test_otp_login_requires_enabled(monkeypatch) -> None:
+    """OTP login should fail when OTP is not enabled for the user.
+
+    Scenario:
+        - User exists but otp_enabled=False and otp_secret is missing.
+
+    Expected behavior:
+        - Endpoint returns 401.
+    """
+
     class _Role:
         value = "CUSTOMER"
 
@@ -63,7 +83,17 @@ def test_otp_login_requires_enabled(monkeypatch):
     assert resp.status_code == 401
 
 
-def test_otp_login_invalid_code(monkeypatch):
+def test_otp_login_invalid_code(monkeypatch) -> None:
+    """OTP login should fail when the provided code is invalid.
+
+    Scenario:
+        - User exists and otp_enabled=True.
+        - Client sends an incorrect TOTP code.
+
+    Expected behavior:
+        - Endpoint returns 401.
+    """
+
     class _Role:
         value = "CUSTOMER"
 

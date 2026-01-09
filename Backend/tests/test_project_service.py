@@ -10,6 +10,16 @@ from app.services.project_service import ProjectService
 
 
 class _ProjectRepoFake:
+    """In-memory fake of ProjectRepository.
+
+    Stores projects in a dict keyed by project id and records side effects
+    (creates, assignments, closures) for assertions.
+
+    Notes:
+        This fake implements only the subset of repository methods that
+        ProjectService/AssignmentService use.
+    """
+
     def __init__(self) -> None:
         self.created = []
         self.assigned: list[tuple[str, str, str]] = []
@@ -27,6 +37,21 @@ class _ProjectRepoFake:
     async def get_by_id(self, project_id: UUID):
         return self._stored.get(str(project_id))
 
+    async def count_active_by_translator_ids(self, translator_ids: list[UUID]) -> dict[str, int]:
+        """Return active project counts per translator.
+
+        Args:
+            translator_ids: Translator UUIDs.
+
+        Returns:
+            dict[str, int]: Mapping {translator_id: active_project_count}.
+
+        Notes:
+            The default behavior is "everyone has 0 active projects" which
+            makes assignment deterministic for unit tests.
+        """
+        return {str(t): 0 for t in translator_ids}
+
     async def close_project(self, project_id: UUID) -> None:
         p = self._stored.get(str(project_id))
         if p:
@@ -42,6 +67,8 @@ class _ProjectRepoFake:
 
 
 class _TranslatorLangRepoFake:
+    """Fake of TranslatorLanguageRepository returning a predefined translator list."""
+
     def __init__(self, ids: list[str]):
         self._ids = ids
 
@@ -50,6 +77,8 @@ class _TranslatorLangRepoFake:
 
 
 class _UserRepoFake:
+    """In-memory fake of UserRepository used to resolve user details by id."""
+
     def __init__(self, by_id: dict[str, User]):
         self._by_id = by_id
 
@@ -58,17 +87,20 @@ class _UserRepoFake:
 
 
 class _GridFsFake:
+    """Fake GridFS service that records uploads and returns a static file id."""
+
     def __init__(self, file_id: str = "507f1f77bcf86cd799439011"):
         self.file_id = file_id
         self.uploaded: list[tuple[str, bytes, dict]] = []
 
     async def upload(self, *, filename: str, data: bytes, metadata: dict | None = None):
         self.uploaded.append((filename, data, metadata or {}))
-        # ObjectId-like string
         return self.file_id
 
 
 class _EmailFake:
+    """Fake email service collecting sent messages for assertions."""
+
     def __init__(self) -> None:
         self.sent: list[dict] = []
 
@@ -77,7 +109,22 @@ class _EmailFake:
 
 
 @pytest.mark.asyncio
-async def test_project_service_creates_and_assigns_when_translator_exists():
+async def test_project_service_creates_and_assigns_when_translator_exists() -> None:
+    """ProjectService should create and assign a project when a translator exists.
+
+    This is a unit test of the project creation and assignment business logic.
+
+    Scenario:
+        - A CUSTOMER creates a project for language "cs".
+        - There is at least one TRANSLATOR supporting that language.
+
+    Expected behavior:
+        - Project is persisted.
+        - Translator is assigned.
+        - Project ends in ASSIGNED state.
+        - Translator receives an email notification.
+    """
+
     customer = User.model_validate({"id": UUID("00000000-0000-0000-0000-000000000001"), "name": "cust", "email_address": "c@x.com", "role": UserRole.CUSTOMER, "password_hash": "x"})
     translator = User.model_validate({"id": UUID("00000000-0000-0000-0000-000000000002"), "name": "tr", "email_address": "t@x.com", "role": UserRole.TRANSLATOR, "password_hash": "x"})
 
@@ -110,7 +157,21 @@ async def test_project_service_creates_and_assigns_when_translator_exists():
 
 
 @pytest.mark.asyncio
-async def test_project_service_closes_when_no_translator():
+async def test_project_service_closes_when_no_translator() -> None:
+    """ProjectService should close the project when no translator exists.
+
+    This is a unit test covering the negative path in the assignment logic.
+
+    Scenario:
+        - A CUSTOMER creates a project for language "cs".
+        - There are no translators supporting that language.
+
+    Expected behavior:
+        - Project is persisted.
+        - Project is transitioned to CLOSED state.
+        - CUSTOMER receives an email notification.
+    """
+
     customer = User.model_validate({"id": UUID("00000000-0000-0000-0000-000000000001"), "name": "cust", "email_address": "c@x.com", "role": UserRole.CUSTOMER, "password_hash": "x"})
 
     project_repo = _ProjectRepoFake()
@@ -137,5 +198,4 @@ async def test_project_service_closes_when_no_translator():
 
     assert res.assigned_translator_id is None
     assert res.project.state == ProjectState.CLOSED
-    # email zákazníkovi
     assert mailer.sent and mailer.sent[0]["to"] == "c@x.com"

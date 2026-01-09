@@ -12,7 +12,19 @@ from app.repositories.projects import ProjectRepository
 
 @pytest.mark.asyncio
 async def test_project_repository_create_and_get() -> None:
-    # Integrační test: vyžaduje běžící MongoDB.
+    """ProjectRepository should persist and load a project (integration).
+
+    This test touches a real MongoDB instance.
+
+    Environment:
+        - MONGODB_URI (default: mongodb://localhost:27017)
+        - MONGODB_DB (default: piae_test)
+
+    Expected behavior:
+        - `create()` writes a document with expected fields.
+        - `get_by_id()` returns the created project.
+    """
+
     mongodb_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
     db_name = os.getenv("MONGODB_DB", "piae_test")
 

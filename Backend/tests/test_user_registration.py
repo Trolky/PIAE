@@ -12,7 +12,7 @@ class _RepoFake:
         self.fail_on_create = fail_on_create
         self.created = []
 
-    async def ensure_indexes(self) -> None:  # pragma: no cover
+    async def ensure_indexes(self) -> None:
         return None
 
     async def create(self, user):
@@ -22,7 +22,18 @@ class _RepoFake:
 
 
 @pytest.mark.asyncio
-async def test_register_customer_success(monkeypatch):
+async def test_register_customer_success(monkeypatch) -> None:
+    """Registration should create a CUSTOMER account with a hashed password.
+
+    Scenario:
+        - Request payload is valid.
+        - Repository create succeeds.
+
+    Expected behavior:
+        - Endpoint returns a user with CUSTOMER role.
+        - Password is stored as a hash.
+        - Repository create is called.
+    """
     from app import api
 
     fake = _RepoFake()
@@ -46,7 +57,17 @@ async def test_register_customer_success(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_register_translator_success(monkeypatch):
+async def test_register_translator_success(monkeypatch) -> None:
+    """Registration should create a TRANSLATOR account.
+
+    Scenario:
+        - Request payload is valid.
+        - Repository create succeeds.
+
+    Expected behavior:
+        - Endpoint returns a user with TRANSLATOR role.
+        - Repository create is called.
+    """
     from app import api
 
     fake = _RepoFake()
@@ -67,7 +88,15 @@ async def test_register_translator_success(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_register_duplicate_returns_409(monkeypatch):
+async def test_register_duplicate_returns_409(monkeypatch) -> None:
+    """Registration should fail with a conflict when user already exists.
+
+    Scenario:
+        - Repository create fails (e.g., duplicate key).
+
+    Expected behavior:
+        - Endpoint raises an exception containing "already exists".
+    """
     from app import api
 
     fake = _RepoFake(fail_on_create=True)

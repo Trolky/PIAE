@@ -9,12 +9,27 @@ from app.main import app
 
 
 def _auth_header(token: str) -> dict[str, str]:
+    """Build Authorization header for test requests.
+
+    Args:
+        token: JWT token string.
+
+    Returns:
+        dict[str, str]: Headers including Bearer token.
+    """
     return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.mark.asyncio
-async def test_create_project_requires_customer_role(monkeypatch):
-    """Ověří, že /projects POST je chráněný a jen pro CUSTOMER."""
+async def test_create_project_requires_customer_role(monkeypatch) -> None:
+    """Create-project endpoint should require CUSTOMER role.
+
+    Scenario:
+        - Current user is a TRANSLATOR.
+
+    Expected behavior:
+        - POST /projects returns 403.
+    """
 
     from app.api import deps
     from app.domain.enums import UserRole
@@ -41,8 +56,17 @@ async def test_create_project_requires_customer_role(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_create_project_rejects_too_large(monkeypatch):
-    """Chování limitu uploadu."""
+async def test_create_project_rejects_too_large(monkeypatch) -> None:
+    """Create-project endpoint should reject oversized uploads.
+
+    Scenario:
+        - Current user is a CUSTOMER.
+        - max_upload_mb is set to 1 MB.
+        - Uploaded file is 1 MB + 1 byte.
+
+    Expected behavior:
+        - POST /projects returns 413.
+    """
 
     from app.api import deps
     from app.domain.enums import UserRole
