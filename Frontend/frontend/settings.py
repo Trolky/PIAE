@@ -91,7 +91,7 @@ LANGUAGES: list[tuple[str, str]] = [
 
 LOCALE_PATHS: list[Path] = [BASE_DIR / "locale"]
 
-TIME_ZONE: str = "UTC"
+TIME_ZONE: str = "CET"
 USE_I18N: bool = True
 USE_L10N: bool = True
 USE_TZ: bool = True
