@@ -5,26 +5,79 @@
 
 {% block content %}
   <section class="hero">
-    <h1>{% trans "Translation Projects" %}</h1>
+    {% if request.session.user and request.session.user.role %}
+      {% with role=request.session.user.role|upper %}
+        {% if role == 'CUSTOMER' %}
+          <h1>{% trans "Welcome" %}, {{ request.session.user.username }}</h1>
+          <p class="muted">{% trans "Create translation projects and review delivered translations." %}</p>
 
-    <div class="card-grid">
-      <div class="card">
-        <h2>{% trans "Customer" %}</h2>
-        <p>{% trans "Create translation projects and approve results." %}</p>
-        <a class="button" href="{% url 'create_project' %}">{% trans "Create project" %}</a>
-      </div>
+          <div class="card-grid">
+            <div class="card">
+              <h2>{% trans "New project" %}</h2>
+              <p>{% trans "Upload a document and choose a target language." %}</p>
+              <a class="button" href="{% url 'create_project' %}">{% trans "Create project" %}</a>
+            </div>
 
-      <div class="card">
-        <h2>{% trans "Translator" %}</h2>
-        <p>{% trans "See assigned projects and upload translated files." %}</p>
-        <a class="button" href="{% url 'projects' %}">{% trans "My assignments" %}</a>
-      </div>
+            <div class="card">
+              <h2>{% trans "My projects" %}</h2>
+              <p>{% trans "Track progress and approve or reject translations." %}</p>
+              <a class="button button--ghost" href="{% url 'projects' %}">{% trans "Open projects" %}</a>
+            </div>
+          </div>
 
-      <div class="card">
-        <h2>{% trans "Administrator" %}</h2>
-        <p>{% trans "Resolve feedback and close projects." %}</p>
-        <a class="button" href="{% url 'projects' %}">{% trans "Projects" %}</a>
+        {% elif role == 'TRANSLATOR' %}
+          <h1>{% trans "Welcome" %}, {{ request.session.user.username }}</h1>
+          <p class="muted">{% trans "See assigned projects and upload translated files." %}</p>
+
+          <div class="card-grid">
+            <div class="card">
+              <h2>{% trans "My assignments" %}</h2>
+              <p>{% trans "Open an assigned project and submit a translation." %}</p>
+              <a class="button" href="{% url 'projects' %}">{% trans "Open projects" %}</a>
+            </div>
+
+            <div class="card">
+              <h2>{% trans "Languages" %}</h2>
+              <p>{% trans "Manage the languages you translate to." %}</p>
+              <a class="button button--ghost" href="{% url 'languages' %}">{% trans "Manage languages" %}</a>
+            </div>
+          </div>
+
+        {% elif role == 'ADMINISTRATOR' %}
+          <h1>{% trans "Admin dashboard" %}</h1>
+          <p class="muted">{% trans "Resolve feedback, message users and close projects." %}</p>
+
+          <div class="card-grid">
+            <div class="card">
+              <h2>{% trans "Projects" %}</h2>
+              <p>{% trans "See projects with feedback." %}</p>
+              <a class="button" href="{% url 'projects' %}">{% trans "Open admin view" %}</a>
+            </div>
+          </div>
+
+        {% else %}
+          <h1>{% trans "Welcome" %}</h1>
+          <p class="muted">{% trans "Choose an action from the menu." %}</p>
+        {% endif %}
+      {% endwith %}
+
+    {% else %}
+      <h1>{% trans "Translation Projects" %}</h1>
+      <p class="muted">{% trans "Log in to create projects, translate, or manage feedback." %}</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <h2>{% trans "Login" %}</h2>
+          <p>{% trans "Already have an account?" %}</p>
+          <a class="button" href="{% url 'login' %}">{% trans "Login" %}</a>
+        </div>
+
+        <div class="card">
+          <h2>{% trans "Register" %}</h2>
+          <p>{% trans "Create a new customer or translator account." %}</p>
+          <a class="button button--ghost" href="{% url 'register' %}">{% trans "Register" %}</a>
+        </div>
       </div>
-    </div>
+    {% endif %}
   </section>
 {% endblock %}

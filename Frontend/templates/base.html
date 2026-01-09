@@ -13,7 +13,7 @@
       <div class="container topbar__inner">
         <a class="brand" href="{% url 'home' %}">{% trans "PIAE" %}</a>
 
-        <nav class="nav">
+        <nav class="nav nav--desktop">
           {% if request.session.user and request.session.user.role and request.session.user.role|upper == 'ADMINISTRATOR' %}
             <a class="nav__link" href="{% url 'projects' %}">{% trans "Projects" %}</a>
           {% else %}
@@ -30,7 +30,7 @@
           {% endif %}
         </nav>
 
-        <div class="auth">
+        <div class="auth auth--desktop">
           <form method="post" action="{% url 'set_language' %}" class="langswitch" aria-label="Language switcher">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ request.get_full_path }}" />
@@ -61,6 +61,61 @@
             <a class="button" href="{% url 'register' %}">{% trans "Register" %}</a>
           {% endif %}
         </div>
+
+        <details class="navmobile" aria-label="Mobile menu">
+          <summary class="navmobile__toggle" aria-label="Open menu">
+            <span class="navmobile__icon" aria-hidden="true"></span>
+          </summary>
+          <div class="navmobile__panel">
+            <nav class="nav nav--mobile" aria-label="Navigation">
+              {% if request.session.user and request.session.user.role and request.session.user.role|upper == 'ADMINISTRATOR' %}
+                <a class="nav__link" href="{% url 'projects' %}">{% trans "Projects" %}</a>
+              {% else %}
+                <a class="nav__link" href="{% url 'home' %}">{% trans "Home" %}</a>
+                {% if request.session.user and request.session.user.role and request.session.user.role|upper == 'CUSTOMER' %}
+                  <a class="nav__link" href="{% url 'create_project' %}">{% trans "New project" %}</a>
+                {% endif %}
+                {% if request.session.user %}
+                  <a class="nav__link" href="{% url 'projects' %}">{% trans "Projects" %}</a>
+                {% endif %}
+                {% if request.session.user and request.session.user.role and request.session.user.role|upper in 'TRANSLATOR ADMINISTRATOR' %}
+                  <a class="nav__link" href="{% url 'languages' %}">{% trans "Languages" %}</a>
+                {% endif %}
+              {% endif %}
+            </nav>
+
+            <div class="auth auth--mobile" aria-label="Account">
+              <form method="post" action="{% url 'set_language' %}" class="langswitch" aria-label="Language switcher">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                <label class="sr-only" for="lang-select-mobile">{% trans "Language" %}</label>
+                <select id="lang-select-mobile" name="language" class="field__input" onchange="this.form.submit()">
+                  {% if CURRENT_LANGUAGE == 'cs' %}
+                    <option value="en">EN</option>
+                    <option value="cs" selected>CS</option>
+                  {% else %}
+                    <option value="en" selected>EN</option>
+                    <option value="cs">CS</option>
+                  {% endif %}
+                </select>
+              </form>
+
+              {% if request.session.user %}
+                <div class="userpill">
+                  <span class="userpill__name">{{ request.session.user.username }}</span>
+                  {% if request.session.user.role %}
+                    <span class="role role--{{ request.session.user.role|lower }}">{{ request.session.user.role }}</span>
+                  {% endif %}
+                </div>
+                <a class="button button--ghost button--full" href="{% url 'otp_setup' %}">{% trans "OTP setup" %}</a>
+                <a class="button button--ghost button--full" href="{% url 'logout' %}">{% trans "Logout" %}</a>
+              {% else %}
+                <a class="button button--ghost button--full" href="{% url 'login' %}">{% trans "Login" %}</a>
+                <a class="button button--full" href="{% url 'register' %}">{% trans "Register" %}</a>
+              {% endif %}
+            </div>
+          </div>
+        </details>
       </div>
     </header>
 

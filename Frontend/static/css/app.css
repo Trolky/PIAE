@@ -18,11 +18,21 @@
 
 * { box-sizing: border-box; }
 
+html, body {
+  width: 100%;
+}
+
 body {
   margin: 0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
   background: radial-gradient(1200px 600px at 10% 0%, rgba(91, 140, 255, 0.25), transparent 60%), var(--bg);
   color: var(--text);
+  overflow-x: hidden;
+}
+
+img, video {
+  max-width: 100%;
+  height: auto;
 }
 
 .container {
@@ -43,6 +53,7 @@ body {
   align-items: center;
   gap: 16px;
   padding: 14px 0;
+  min-width: 0;
 }
 
 .brand {
@@ -147,19 +158,19 @@ h1 { margin: 0 0 10px; font-size: 34px; }
   padding: 10px 12px;
   color: var(--text);
   outline: none;
+  color-scheme: dark;
 }
 
-/* Selecty mají na Windows často vlastní dropdown UI – musíme nastavit i barvy option */
 select.field__input {
-  /* samotný zavřený select necháme v dark stylu stejně jako input */
+  background-color: var(--select-bg);
+  color: var(--select-text);
+
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
 
-  /* místo pro vlastní šipku */
   padding-right: 40px;
 
-  /* lehká šipka doprava (bez obrázku) */
   background-image:
     linear-gradient(45deg, transparent 50%, rgba(232, 238, 252, 0.9) 50%),
     linear-gradient(135deg, rgba(232, 238, 252, 0.9) 50%, transparent 50%),
@@ -402,6 +413,11 @@ select.field__input {
   width: auto;
 }
 
+.navmobile .langswitch .field__input {
+  width: 100%;
+  min-width: 75px;
+}
+
 .sr-only {
   position: absolute !important;
   width: 1px;
@@ -414,7 +430,80 @@ select.field__input {
   border: 0;
 }
 
+.pagehead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.row--between {
+  justify-content: space-between;
+}
+
+.row--wrap {
+  flex-wrap: wrap;
+}
+
+.grid__span {
+  grid-column: 1 / -1;
+}
+
+/* Desktop by default: hide mobile menu */
+.navmobile {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .card-grid { grid-template-columns: 1fr; }
-  .nav { display: none; }
+  .nav--desktop { display: none; }
+  .auth--desktop { display: none; }
+  .navmobile { display: block; }
+
+  /* V mobilním menu necháme nativní šipku prohlížeče, aby nebyly dvě. */
+  .navmobile select.field__input {
+    appearance: auto;
+    -webkit-appearance: menulist;
+    -moz-appearance: auto;
+
+    background-image: none;
+    padding-right: 12px;
+
+    /* text musí zůstat čitelný */
+    background-color: var(--select-bg);
+    color: var(--select-text);
+
+    /* ať není přehnaně široký */
+    width: auto;
+    max-width: 120px;
+  }
+
+  /* V mobilu nepoužívej pill look (999px), bere moc místa */
+  .navmobile .langswitch .field__input {
+    border-radius: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+}
+
+@media (max-width: 700px) {
+  .container { width: calc(100% - 24px); }
+  h1 { font-size: 28px; }
+  .topbar__inner { gap: 10px; padding: 10px 0; }
+  .userpill { display: none; }
+  .grid--2 { grid-template-columns: 1fr; }
+  .table th, .table td { padding: 9px 8px; }
+}
+
+@media (max-width: 440px) {
+  .container { width: calc(100% - 18px); }
+  .button { padding: 10px 10px; }
+  .langswitch .field__input { width: 100%; }
 }

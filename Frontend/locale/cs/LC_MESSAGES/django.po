@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-08 22:03+0000\n"
+"POT-Creation-Date: 2026-01-10 00:11+0100\n"
 "Language: cs\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -17,52 +17,57 @@ msgstr ""
 msgid "PIAE"
 msgstr "PIAE"
 
-#: templates/base.html:18 templates/base.html:25 templates/web/home.html:26
+#: templates/base.html:18 templates/base.html:25 templates/base.html:72
+#: templates/base.html:79 templates/web/home.html:52
 #: templates/web/projects.html:4 templates/web/projects.html:8
 #: templates/web/projects_admin.html:4 templates/web/projects_admin.html:8
 msgid "Projects"
 msgstr "Projekty"
 
-#: templates/base.html:20 templates/web/home.html:4
+#: templates/base.html:20 templates/base.html:74 templates/web/home.html:4
 msgid "Home"
 msgstr "Domů"
 
-#: templates/base.html:22 templates/web/create_project.html:4
+#: templates/base.html:22 templates/base.html:76
+#: templates/web/create_project.html:4 templates/web/home.html:16
 msgid "New project"
 msgstr "Nový projekt"
 
-#: templates/base.html:28 templates/web/languages.html:4
+#: templates/base.html:28 templates/base.html:82 templates/web/home.html:40
+#: templates/web/languages.html:4
 msgid "Languages"
 msgstr "Jazyky"
 
-#: templates/base.html:38 templates/web/projects.html:30
+#: templates/base.html:38 templates/base.html:91 templates/web/projects.html:30
 msgid "Language"
 msgstr "Jazyk"
 
-#: templates/base.html:57 templates/web/login.html:13
+#: templates/base.html:57 templates/base.html:110
 #: templates/web/otp_setup.html:4 templates/web/otp_setup.html:8
 msgid "OTP setup"
 msgstr "Nastavení OTP"
 
-#: templates/base.html:58
+#: templates/base.html:58 templates/base.html:111
 msgid "Logout"
 msgstr "Odhlásit se"
 
-#: templates/base.html:60 templates/web/login.html:4 templates/web/login.html:9
-#: templates/web/register.html:50
+#: templates/base.html:60 templates/base.html:113 templates/web/home.html:70
+#: templates/web/home.html:72 templates/web/login.html:4
+#: templates/web/login.html:9 templates/web/register.html:50
 msgid "Login"
 msgstr "Přihlášení"
 
-#: templates/base.html:61 templates/web/login.html:79
+#: templates/base.html:61 templates/base.html:114 templates/web/home.html:76
+#: templates/web/home.html:78 templates/web/login.html:78
 #: templates/web/register.html:4 templates/web/register.html:9
 msgid "Register"
 msgstr "Registrace"
 
-#: templates/base.html:81
+#: templates/base.html:136
 msgid "PIAE • prototype UI"
 msgstr "PIAE • prototypové UI"
 
-#: templates/web/create_project.html:9 templates/web/home.html:14
+#: templates/web/create_project.html:9 templates/web/home.html:18
 msgid "Create project"
 msgstr "Vytvořit projekt"
 
@@ -72,11 +77,11 @@ msgstr "Nahrajte zdrojový soubor v angličtině a vyberte cílový jazyk."
 
 #: templates/web/create_project.html:16
 #: templates/web/project_detail_customer.html:20
-#: templates/web/project_detail_translator.html:24 web/project_forms.py:11
+#: templates/web/project_detail_translator.html:24 web/project_forms.py:18
 msgid "Target language"
 msgstr "Cílový jazyk"
 
-#: templates/web/create_project.html:22 web/project_forms.py:16
+#: templates/web/create_project.html:22 web/project_forms.py:23
 msgid "Source file (English)"
 msgstr "Zdrojový soubor (anglicky)"
 
@@ -88,42 +93,88 @@ msgstr "Maximální velikost nahrávání je omezena backendem."
 msgid "Create"
 msgstr "Vytvořit"
 
-#: templates/web/home.html:8
-msgid "Translation Projects"
-msgstr "Překladatelské projekty"
+#: templates/web/home.html:11 templates/web/home.html:29
+#: templates/web/home.html:59
+msgid "Welcome"
+msgstr "Vítejte"
 
-#: templates/web/home.html:12 templates/web/project_detail_admin.html:24
-#: templates/web/project_detail_translator.html:28
-#: templates/web/projects.html:35 templates/web/projects_admin.html:23
-#: web/admin_forms.py:9 web/forms.py:69
-msgid "Customer"
-msgstr "Zákazník"
+#: templates/web/home.html:12
+msgid "Create translation projects and review delivered translations."
+msgstr "Vytvářejte překladatelské projekty a kontrolujte dodané překlady."
 
-#: templates/web/home.html:13
-msgid "Create translation projects and approve results."
-msgstr "Vytvářejte překladatelské projekty a schvalujte výsledky."
+#: templates/web/home.html:17
+msgid "Upload a document and choose a target language."
+msgstr "Nahrajte dokument a vyberte cílový jazyk."
 
-#: templates/web/home.html:18 templates/web/project_detail_admin.html:28
-#: templates/web/project_detail_customer.html:24 templates/web/projects.html:33
-#: templates/web/projects_admin.html:24 web/admin_forms.py:10 web/forms.py:70
-msgid "Translator"
-msgstr "Překladatel"
+#: templates/web/home.html:22
+msgid "My projects"
+msgstr "Moje projekty"
 
-#: templates/web/home.html:19
+#: templates/web/home.html:23
+msgid "Track progress and approve or reject translations."
+msgstr "Sledujte průběh a schvalujte nebo zamítejte překlady."
+
+#: templates/web/home.html:24 templates/web/home.html:36
+msgid "Open projects"
+msgstr "Otevřít projekty"
+
+#: templates/web/home.html:30
 msgid "See assigned projects and upload translated files."
 msgstr "Prohlížejte přiřazené projekty a nahrávejte přeložené soubory."
 
-#: templates/web/home.html:20
+#: templates/web/home.html:34
 msgid "My assignments"
 msgstr "Moje úkoly"
 
-#: templates/web/home.html:24
-msgid "Administrator"
-msgstr "Administrátor"
+#: templates/web/home.html:35
+msgid "Open an assigned project and submit a translation."
+msgstr "Otevřete přiřazený projekt a odešlete překlad."
 
-#: templates/web/home.html:25
-msgid "Resolve feedback and close projects."
-msgstr "Řešte zpětnou vazbu a uzavírejte projekty."
+#: templates/web/home.html:41
+msgid "Manage the languages you translate to."
+msgstr "Spravujte jazyky, do kterých překládáte."
+
+#: templates/web/home.html:42
+msgid "Manage languages"
+msgstr "Spravovat jazyky"
+
+#: templates/web/home.html:47
+msgid "Admin dashboard"
+msgstr "Administrace"
+
+#: templates/web/home.html:48
+msgid "Resolve feedback, message users and close projects."
+msgstr ""
+"Řešte zpětnou vazbu, posílejte zprávy uživatelům a uzavírejte projekty."
+
+#: templates/web/home.html:53
+msgid "See projects with feedback."
+msgstr "Zobrazit projekty se zpětnou vazbou."
+
+#: templates/web/home.html:54
+msgid "Open admin view"
+msgstr "Otevřít admin pohled"
+
+#: templates/web/home.html:60
+msgid "Choose an action from the menu."
+msgstr "Vyberte akci z menu."
+
+#: templates/web/home.html:65
+msgid "Translation Projects"
+msgstr "Překladatelské projekty"
+
+#: templates/web/home.html:66
+msgid "Log in to create projects, translate, or manage feedback."
+msgstr ""
+"Přihlaste se pro vytváření projektů, překlady nebo správu zpětné vazby."
+
+#: templates/web/home.html:71 templates/web/register.html:50
+msgid "Already have an account?"
+msgstr "Už máte účet?"
+
+#: templates/web/home.html:77
+msgid "Create a new customer or translator account."
+msgstr "Vytvořte nový účet zákazníka nebo překladatele."
 
 #: templates/web/languages.html:9
 msgid "My languages"
@@ -133,7 +184,7 @@ msgstr "Moje jazyky"
 msgid "Choose target languages you can translate to from English."
 msgstr "Vyberte cílové jazyky, do kterých můžete překládat z angličtiny."
 
-#: templates/web/languages.html:17 web/language_forms.py:22
+#: templates/web/languages.html:17 web/language_forms.py:24
 msgid "Translate to"
 msgstr "Překládat do"
 
@@ -160,22 +211,22 @@ msgstr ""
 "Pro použití OTP se nejdříve přihlaste heslem a aktivujte si OTP ve svém "
 "profilu."
 
-#: templates/web/login.html:34 templates/web/login.html:40
-#: templates/web/register.html:15 web/forms.py:23 web/forms.py:58
+#: templates/web/login.html:33 templates/web/login.html:39
+#: templates/web/register.html:15 web/forms.py:34 web/forms.py:79
 msgid "Username"
 msgstr "Uživatelské jméno"
 
-#: templates/web/login.html:48 templates/web/login.html:54
-#: templates/web/register.html:34 web/forms.py:9 web/forms.py:30
-#: web/forms.py:76
+#: templates/web/login.html:47 templates/web/login.html:53
+#: templates/web/register.html:34 web/forms.py:20 web/forms.py:41
+#: web/forms.py:97
 msgid "Password"
 msgstr "Heslo"
 
-#: templates/web/login.html:75
+#: templates/web/login.html:74
 msgid "Sign in"
 msgstr "Přihlásit se"
 
-#: templates/web/login.html:79
+#: templates/web/login.html:78
 msgid "Don't have an account?"
 msgstr "Nemáte účet?"
 
@@ -219,6 +270,19 @@ msgstr "Zpět na projekty"
 msgid "Status"
 msgstr "Stav"
 
+#: templates/web/project_detail_admin.html:24
+#: templates/web/project_detail_translator.html:28
+#: templates/web/projects.html:35 templates/web/projects_admin.html:23
+#: web/admin_forms.py:12 web/forms.py:90
+msgid "Customer"
+msgstr "Zákazník"
+
+#: templates/web/project_detail_admin.html:28
+#: templates/web/project_detail_customer.html:24 templates/web/projects.html:33
+#: templates/web/projects_admin.html:24 web/admin_forms.py:13 web/forms.py:91
+msgid "Translator"
+msgstr "Překladatel"
+
 #: templates/web/project_detail_admin.html:32
 #: templates/web/projects_admin.html:25
 msgid "Feedback"
@@ -238,16 +302,16 @@ msgstr "Poslat zprávu"
 msgid "Send"
 msgstr "Odeslat"
 
-#: templates/web/project_detail_admin.html:69
-#: templates/web/project_detail_admin.html:73
+#: templates/web/project_detail_admin.html:68
+#: templates/web/project_detail_admin.html:72
 msgid "Close project"
 msgstr "Uzavřít projekt"
 
-#: templates/web/project_detail_admin.html:75
+#: templates/web/project_detail_admin.html:74
 msgid "Closing will notify customer and translator by email."
 msgstr "Uzavření odešle email zákazníkovi i překladateli."
 
-#: templates/web/project_detail_admin.html:79
+#: templates/web/project_detail_admin.html:78
 msgid "This project is already"
 msgstr "Tento projekt je již"
 
@@ -268,7 +332,7 @@ msgid "Download"
 msgstr "Stáhnout"
 
 #: templates/web/project_detail_customer.html:41
-#: templates/web/project_detail_translator.html:40 web/translator_forms.py:8
+#: templates/web/project_detail_translator.html:40 web/translator_forms.py:10
 msgid "Translated file"
 msgstr "Přeložený soubor"
 
@@ -399,15 +463,15 @@ msgstr ""
 msgid "No projects found."
 msgstr "Nenalezeny žádné projekty."
 
-#: templates/web/register.html:22 web/forms.py:63
+#: templates/web/register.html:22 web/forms.py:84
 msgid "Email"
 msgstr "Email"
 
-#: templates/web/register.html:28 web/forms.py:67
+#: templates/web/register.html:28 web/forms.py:88
 msgid "Role"
 msgstr "Role"
 
-#: templates/web/register.html:41 web/forms.py:82
+#: templates/web/register.html:41 web/forms.py:103
 msgid "Confirm password"
 msgstr "Potvrďte heslo"
 
@@ -415,73 +479,69 @@ msgstr "Potvrďte heslo"
 msgid "Create account"
 msgstr "Vytvořit účet"
 
-#: templates/web/register.html:50
-msgid "Already have an account?"
-msgstr "Už máte účet?"
-
-#: web/admin_forms.py:13
+#: web/admin_forms.py:16
 msgid "To"
 msgstr "Komu"
 
-#: web/admin_forms.py:15 web/admin_forms.py:17
+#: web/admin_forms.py:18 web/admin_forms.py:20
 msgid "Subject"
 msgstr "Předmět"
 
-#: web/admin_forms.py:20 web/admin_forms.py:22
+#: web/admin_forms.py:23 web/admin_forms.py:25
 msgid "Message"
 msgstr "Zpráva"
 
-#: web/customer_forms.py:9
+#: web/customer_forms.py:16
 #, fuzzy
 #| msgid "from translator"
 msgid "Feedback for translator"
 msgstr "od překladatele"
 
-#: web/customer_forms.py:14
+#: web/customer_forms.py:21
 msgid "Overall evaluation (optional for approve, required for reject)"
 msgstr "Celkové zhodnocení (u schválení volitelné, u zamítnutí povinné)"
 
-#: web/forms.py:10
+#: web/forms.py:21
 msgid "One-time code (OTP)"
 msgstr "Jednorázový kód (OTP)"
 
-#: web/forms.py:14
+#: web/forms.py:25
 msgid "Login method"
 msgstr "Způsob přihlášení"
 
-#: web/forms.py:19
+#: web/forms.py:30
 msgid "OTP requires prior activation after password login."
 msgstr "OTP vyžaduje předchozí aktivaci po přihlášení heslem."
 
-#: web/forms.py:25
+#: web/forms.py:36
 msgid "Alphanumeric username"
 msgstr "Alfanumerické uživatelské jméno"
 
-#: web/forms.py:37
+#: web/forms.py:48
 msgid "One-time code"
 msgstr "Jednorázový kód"
 
-#: web/forms.py:49
+#: web/forms.py:60
 msgid "OTP code is required."
 msgstr "Zadejte prosím OTP kód."
 
-#: web/forms.py:52
+#: web/forms.py:63
 msgid "Password is required."
 msgstr "Zadejte prosím heslo."
 
-#: web/forms.py:79
+#: web/forms.py:100
 msgid "Minimum 8 characters and at least one of them must be a number."
 msgstr "Minimálně 8 znaků a alespoň jeden z nich musí být číslo."
 
-#: web/forms.py:90
+#: web/forms.py:111
 msgid "Username must be alphanumeric."
 msgstr "Uživatelské jméno musí být alfanumerické."
 
-#: web/forms.py:96
+#: web/forms.py:117
 msgid "Password must contain at least one letter and one number."
 msgstr "Heslo musí obsahovat alespoň jedno písmeno a jedno číslo."
 
-#: web/forms.py:104
+#: web/forms.py:125
 msgid "Passwords do not match."
 msgstr "Hesla se neshodují."
 
@@ -525,158 +585,164 @@ msgstr "Nizozemština (nl)"
 msgid "Swedish (sv)"
 msgstr "Švédština (sv)"
 
-#: web/language_forms.py:37
+#: web/language_forms.py:41
 msgid "Invalid language code"
 msgstr "Neplatný kód jazyka"
 
-#: web/project_forms.py:24 web/translator_forms.py:13
+#: web/project_forms.py:31 web/translator_forms.py:15
 msgid "File is required"
 msgstr "Soubor je povinný"
 
-#: web/views.py:70 web/views.py:295 web/views.py:367 web/views.py:392
-#: web/views.py:436 web/views.py:461 web/views.py:493 web/views.py:551
+#: web/views.py:114 web/views.py:353 web/views.py:426 web/views.py:456
+#: web/views.py:499 web/views.py:525 web/views.py:558 web/views.py:618
 msgid "Not allowed"
 msgstr "Nemáte oprávnění"
 
-#: web/views.py:75 web/views.py:221 web/views.py:256 web/views.py:261
-#: web/views.py:300 web/views.py:372 web/views.py:397 web/views.py:441
-#: web/views.py:469 web/views.py:501 web/views.py:556 web/views.py:614
+#: web/views.py:119 web/views.py:271 web/views.py:312 web/views.py:317
+#: web/views.py:358 web/views.py:431 web/views.py:461 web/views.py:504
+#: web/views.py:533 web/views.py:566 web/views.py:623 web/views.py:680
 msgid "Not authenticated"
 msgstr "Nejste přihlášen"
 
-#: web/views.py:80
+#: web/views.py:124
 msgid "Missing user id"
 msgstr "Chybí ID uživatele"
 
-#: web/views.py:100
+#: web/views.py:144
 msgid "Language removed"
 msgstr "Jazyk odebrán"
 
-#: web/views.py:103
+#: web/views.py:147
 msgid "Failed to remove language"
 msgstr "Nepodařilo se odebrat jazyk"
 
-#: web/views.py:106
+#: web/views.py:150
 msgid "Invalid remove request"
 msgstr "Neplatný požadavek na odebrání"
 
-#: web/views.py:117
+#: web/views.py:161
 msgid "Language added"
 msgstr "Jazyk přidán"
 
-#: web/views.py:120
+#: web/views.py:164
 msgid "Failed to add language"
 msgstr "Nepodařilo se přidat jazyk"
 
-#: web/views.py:123 web/views.py:171 web/views.py:198 web/views.py:245
-#: web/views.py:348 web/views.py:474 web/views.py:593
+#: web/views.py:167 web/views.py:217 web/views.py:246 web/views.py:295
+#: web/views.py:403 web/views.py:538 web/views.py:659
 msgid "Please fix the form errors."
 msgstr "Opravte prosím chyby ve formuláři."
 
-#: web/views.py:129
+#: web/views.py:173
 msgid "Failed to load languages"
 msgstr "Nepodařilo se načíst jazyky"
 
-#: web/views.py:164
+#: web/views.py:211
 msgid "Logged in"
 msgstr "Přihlášení proběhlo úspěšně"
 
-#: web/views.py:168
+#: web/views.py:214
 msgid "Login failed"
 msgstr "Přihlášení se nezdařilo"
 
-#: web/views.py:192
+#: web/views.py:240
 msgid "Account created. You can log in now."
 msgstr "Účet byl vytvořen. Nyní se můžete přihlásit."
 
-#: web/views.py:195
+#: web/views.py:243
 msgid "Registration failed"
 msgstr "Registrace se nezdařila"
 
-#: web/views.py:208
+#: web/views.py:257
 msgid "Logged out"
 msgstr "Byl jste odhlášen"
 
-#: web/views.py:216
+#: web/views.py:266
 msgid "Only customers can create projects"
 msgstr "Projekty mohou vytvářet pouze zákazníci"
 
-#: web/views.py:239
+#: web/views.py:289
 msgid "Project created"
 msgstr "Projekt vytvořen"
 
-#: web/views.py:242
+#: web/views.py:292
 msgid "Failed to create project"
 msgstr "Nepodařilo se vytvořit projekt"
 
-#: web/views.py:271 web/views.py:282
+#: web/views.py:325 web/views.py:335
 msgid "Failed to load projects"
 msgstr "Nepodařilo se načíst projekty"
 
-#: web/views.py:306 web/views.py:402 web/views.py:562
+#: web/views.py:363 web/views.py:466 web/views.py:628
 msgid "Failed to load project"
 msgstr "Nepodařilo se načíst projekt"
 
-#: web/views.py:312 web/views.py:408 web/views.py:518 web/views.py:568
+#: web/views.py:369 web/views.py:472 web/views.py:581 web/views.py:634
 msgid "Project not found"
 msgstr "Projekt nebyl nalezen"
 
-#: web/views.py:342
+#: web/views.py:397
 msgid "Translation uploaded. Customer will be notified by email."
 msgstr "Překlad byl nahrán. Zákazník bude informován e-mailem."
 
-#: web/views.py:345
+#: web/views.py:400
 msgid "Failed to upload translation"
 msgstr "Nepodařilo se nahrát překlad"
 
-#: web/views.py:377
+#: web/views.py:436
 msgid "Failed to download file"
 msgstr "Nepodařilo se stáhnout soubor"
 
-#: web/views.py:446
+#: web/views.py:509
 msgid "Failed to download translated file"
 msgstr "Nepodařilo se stáhnout přeložený soubor"
 
-#: web/views.py:481
+#: web/views.py:545
 msgid "Approved"
 msgstr "Schváleno"
 
-#: web/views.py:483
+#: web/views.py:547
 msgid "Failed to approve"
 msgstr "Nepodařilo se schválit"
 
-#: web/views.py:509
+#: web/views.py:573
 msgid "Feedback is required when rejecting."
 msgstr "Při zamítnutí je zpětná vazba povinná."
 
-#: web/views.py:539
+#: web/views.py:602
 msgid "Rejected and feedback sent"
 msgstr "Zamítnuto a zpětná vazba odeslána"
 
-#: web/views.py:542
+#: web/views.py:605
 msgid "Failed to reject"
 msgstr "Nepodařilo se zamítnout"
 
-#: web/views.py:587
+#: web/views.py:653
 msgid "Message sent"
 msgstr "Zpráva odeslána"
 
-#: web/views.py:590
+#: web/views.py:656
 msgid "Failed to send message"
 msgstr "Nepodařilo se odeslat zprávu"
 
-#: web/views.py:598
+#: web/views.py:664
 msgid "Project closed"
 msgstr "Projekt uzavřen"
 
-#: web/views.py:601
+#: web/views.py:667
 msgid "Failed to close project"
 msgstr "Nepodařilo se uzavřít projekt"
 
-#: web/views.py:605
+#: web/views.py:671
 msgid "Invalid action"
 msgstr "Neplatná akce"
 
-#: web/views.py:622
+#: web/views.py:687
 msgid "Failed to enable OTP"
 msgstr "Nepodařilo se zapnout OTP"
+
+#~ msgid "Create translation projects and approve results."
+#~ msgstr "Vytvářejte překladatelské projekty a schvalujte výsledky."
+
+#~ msgid "Review translator language settings."
+#~ msgstr "Zkontrolujte nastavení jazyků překladatelů."

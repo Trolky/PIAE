@@ -5,13 +5,13 @@
 
 {% block content %}
   <div class="page">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
+    <div class="pagehead">
       <h1>{% trans "Project" %}</h1>
       <a class="button button--ghost" href="{% url 'projects' %}">{% trans "Back to projects" %}</a>
     </div>
 
     <div class="card">
-      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div class="grid grid--2">
         <div>
           <div class="muted">{% trans "Project ID" %}</div>
           <div class="mono">{{ project.id }}</div>
@@ -28,17 +28,17 @@
           <div class="muted">{% trans "Customer" %}</div>
           <div>{{ project.customer_name|default:project.customer_id }}</div>
         </div>
-        <div style="grid-column: 1 / -1;">
+        <div class="grid__span">
           <div class="muted">{% trans "Original file" %}</div>
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+          <div class="row row--between row--wrap">
             <div class="mono">{{ project.original_file_name|default:"(unknown)" }}</div>
             <a class="button" href="{% url 'project_original' project.id %}">{% trans "Download" %}</a>
           </div>
         </div>
 
-        <div style="grid-column: 1 / -1;">
+        <div class="grid__span">
           <div class="muted">{% trans "Translated file" %}</div>
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+          <div class="row row--between row--wrap">
             {% if has_translated_file %}
               <div class="mono">({% trans "uploaded" %})</div>
               <a class="button button--ghost" href="{% url 'project_translated' project.id %}">{% trans "Download" %}</a>
