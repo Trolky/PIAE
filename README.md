@@ -98,3 +98,51 @@ If you want to run components outside Docker:
 You still need:
 - MongoDB
 - MailHog (or any SMTP mock)
+
+## Development scripts
+
+A small helper script is provided to quickly populate the development database with
+three example users (administrator, customer, translator). The script is
+implemented at `Backend/scripts/create_dev_users.py`.
+
+Usage examples
+
+- Use the Docker host default (recommended when running services with Docker):
+
+```cmd
+python Backend\scripts\create_dev_users.py
+```
+
+The script defaults to `mongodb://host.docker.internal:27017` when no `MONGODB_URI`
+environment variable is present. This allows a container (or a local process)
+to connect to a MongoDB instance running on the host machine.
+
+- Override MongoDB URI via CLI:
+
+```cmd
+python Backend\scripts\create_dev_users.py --mongodb-uri mongodb://host.docker.internal:27017
+```
+
+- Or set `MONGODB_URI` in the environment (Windows cmd example):
+
+```cmd
+set MONGODB_URI=mongodb://host.docker.internal:27017
+python Backend\scripts\create_dev_users.py
+```
+
+Notes
+
+- The script is intended for development only and uses fixed UUIDs and
+  example passwords (`adminpass`, `customerpass`, `translatorpass`).
+- It performs an upsert for each user (existing documents with the same id will
+  be updated), so it's safe to re-run.
+- If you want different credentials or additional users, edit the script or
+  ask for a small enhancement to accept CLI parameters.
+
+Default development users
+
+These users are created by the script above. Use them to login in development:
+
+- Administrator: username `admin`, password `adminpass`
+- Customer: username `customer`, password `customerpass`
+- Translator: username `translator`, password `translatorpass`
